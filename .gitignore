@@ -6,6 +6,7 @@ __pycache__
 db.sqlite3
 media
 
+
 # Backup files # 
 *.bak 
 
@@ -85,7 +86,25 @@ env/
 venv/ 
 ENV/ 
 env.bak/ 
-venv.bak/ 
+venv.bak/
+
+# Terraform
+*.tfvars
+*.tfvars.json
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform/
+crash.log
+*.tflog
+.terraformrc
+terraform.rc
+.terraform*
 
 # mkdocs documentation 
 /site 

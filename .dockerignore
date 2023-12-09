@@ -3,10 +3,16 @@
 **/*.pyo
 **/*.pyd
 .git
+.github/
 .gitignore
 .dockerignore
 Dockerfile
-docker-compose.yml
+docker-compose.*yml
 venv
 db.sqlite3
 *.log
+README.md
+nginx.conf
+Makefile
+tests/
+static/

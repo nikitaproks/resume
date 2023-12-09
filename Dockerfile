@@ -21,6 +21,7 @@ WORKDIR /app
 
 # Copy the project files into the container
 COPY . /app
+RUN chmod +x /app/manage.py
 
 # Export the dependencies to a requirements.txt file
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --only main

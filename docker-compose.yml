@@ -14,7 +14,7 @@ services:
     networks:
       - backend
   server:
-    build: .
+    image: mykytaproks/resume:${TAG}
     command: sh -c "python manage.py migrate && python manage.py createsu && uwsgi --ini uwsgi.ini"
     volumes:
       - .:/app
@@ -27,6 +27,9 @@ services:
       - DB_PASS=${DB_PASS}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
+      - DEBUG=${DEBUG}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
     depends_on:
       - db
     networks:

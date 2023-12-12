@@ -15,4 +15,3 @@ README.md
 nginx.conf
 Makefile
 tests/
-static/

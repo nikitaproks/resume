@@ -3,6 +3,7 @@ version: '3.9'
 services:
   db:
     image: postgres
+    restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -15,6 +16,7 @@ services:
       - backend
   server:
     image: mykytaproks/resume:${TAG}
+    restart: unless-stopped
     command: sh -c "python manage.py migrate && python manage.py createsu && uwsgi --ini uwsgi.ini"
     volumes:
       - static_volume:/www/static
@@ -28,7 +30,7 @@ services:
       - DB_PORT=${DB_PORT}
       - DEBUG=${DEBUG}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_SUPERUSER_NAME=${DJANGO_SUPERUSER_NAME}
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
     depends_on:
@@ -37,6 +39,7 @@ services:
       - backend
   nginx:
     image: nginx:latest
+    restart: on-failure
     ports:
       - "80:80"
     volumes:

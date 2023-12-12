@@ -5,7 +5,6 @@
 .git
 .github/
 .gitignore
-.dockerignore
 Dockerfile
 docker-compose*.yml
 venv

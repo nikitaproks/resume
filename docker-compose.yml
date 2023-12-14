@@ -17,7 +17,7 @@ services:
   server:
     image: mykytaproks/resume_server:${TAG}
     restart: unless-stopped
-    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini --http :8000"
+    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
     volumes:
       - static_volume:/www/static
     environment:

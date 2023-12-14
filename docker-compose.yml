@@ -13,11 +13,11 @@ services:
     ports:
       - "${DB_PORT}:${DB_PORT}"
     networks:
-      - backend
+      - webnet
   server:
     image: mykytaproks/resume_server:${TAG}
     restart: unless-stopped
-    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
+    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini --http :8000"
     volumes:
       - static_volume:/www/static
     environment:
@@ -34,7 +34,13 @@ services:
     depends_on:
       - db
     networks:
-      - backend
+      - webnet
+  frontend:
+    image: mykytaproks/resume_frontend:${TAG}
+    restart: unless-stopped
+    command: sh -c "PORT=${FRONTEND_PORT} node build"
+    networks:
+      - webnet
   nginx:
     image: mykytaproks/resume_nginx:${TAG}
     restart: on-failure
@@ -44,11 +50,12 @@ services:
       - static_volume:/www/static
     depends_on:
       - server
+      - frontend
     networks:
-      - backend
+      - webnet
 volumes:
   postgres_data:
   static_volume:
 
 networks:
-    backend:
+    webnet:

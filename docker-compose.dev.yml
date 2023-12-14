@@ -14,7 +14,7 @@ services:
     ports:
       - "${DB_PORT}:${DB_PORT}"
     networks:
-      - backend
+      - webnet
   server:
     build: ./server
     command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
@@ -25,7 +25,16 @@ services:
     depends_on:
       - db
     networks:
-      - backend
+      - webnet
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    command: sh -c "PORT=${FRONTEND_PORT} npm run dev -- --host"
+    env_file:
+      - ./.env
+    networks:
+      - webnet
   nginx:
     build: ./nginx
     command: nginx -g 'daemon off;'
@@ -35,11 +44,12 @@ services:
       - static_volume:/www/static
     depends_on:
       - server
+      - frontend
     networks:
-      - backend
+      - webnet
 volumes:
   postgres_data:
   static_volume:
 
 networks:
-    backend:
+    webnet:

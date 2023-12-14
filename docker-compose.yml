@@ -17,11 +17,9 @@ services:
   server:
     image: mykytaproks/resume_server:${TAG}
     restart: unless-stopped
-    command: sh -c "python manage.py migrate && python manage.py createsu && uwsgi --ini uwsgi.ini"
+    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
     volumes:
       - static_volume:/www/static
-    ports:
-      - "8000:8000"
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -38,12 +36,11 @@ services:
     networks:
       - backend
   nginx:
-    image: nginx:latest
+    image: mykytaproks/resume_nginx:${TAG}
     restart: on-failure
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/www/static
     depends_on:
       - server

@@ -24,12 +24,9 @@ COPY . /app
 RUN chmod +x /app/manage.py
 
 # Export the dependencies to a requirements.txt file
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes --only main
+RUN poetry install --no-interaction --no-ansi
 
-# Install dependencies using pip
-RUN pip install --no-cache-dir -r requirements.txt
-
-RUN python manage.py collectstatic --noinput
+RUN  poetry run python manage.py collectstatic --noinput
 
 #TODO: Is this safe in production?
 RUN adduser --disabled-password --gecos '' myuser

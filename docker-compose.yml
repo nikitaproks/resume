@@ -20,6 +20,7 @@ services:
     command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
     volumes:
       - static_volume:/www/static
+      - uwsgi_socket:/www/socket
     environment:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
@@ -48,6 +49,7 @@ services:
       - "80:80"
     volumes:
       - static_volume:/www/static
+      - uwsgi_socket:/www/socket
     depends_on:
       - server
       - frontend
@@ -56,6 +58,7 @@ services:
 volumes:
   postgres_data:
   static_volume:
+  uwsgi_socket:
 
 networks:
     webnet:

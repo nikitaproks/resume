@@ -16,8 +16,10 @@ services:
     networks:
       - webnet
   server:
-    build: ./server
-    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
+    build: 
+      context: ./server
+      dockerfile: Dockerfile.dev
+    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run python manage.py runserver 0.0.0.0:8000"
     volumes:
       - static_volume:/www/static
     env_file:
@@ -36,7 +38,9 @@ services:
     networks:
       - webnet
   nginx:
-    build: ./nginx
+    build: 
+      context: ./nginx
+      dockerfile: Dockerfile.dev
     command: nginx -g 'daemon off;'
     ports:
       - "80:80"

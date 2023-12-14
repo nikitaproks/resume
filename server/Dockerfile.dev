@@ -29,7 +29,5 @@ RUN poetry install --no-interaction --no-ansi
 RUN poetry run python manage.py collectstatic --noinput
 
 RUN adduser --disabled-password --gecos '' myuser
-RUN mkdir -p /www/socket && \
-    chown myuser:myuser /www/socket
 
 USER myuser

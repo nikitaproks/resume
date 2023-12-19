@@ -53,7 +53,6 @@ services:
       - static_volume:/www/static
       - uwsgi_socket:/www/socket
       - /etc/letsencrypt:/etc/letsencrypt
-      - /var/www/certbot:/var/www/certbot:ro
     depends_on:
       - server
       - frontend

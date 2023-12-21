@@ -25,9 +25,3 @@ RUN chmod +x /app/manage.py
 
 # Export the dependencies to a requirements.txt file
 RUN poetry install --no-interaction --no-ansi
-
-RUN poetry run python manage.py collectstatic --noinput
-
-RUN adduser --disabled-password --gecos '' myuser
-
-USER myuser

@@ -19,9 +19,12 @@ services:
     build: 
       context: ./server
       dockerfile: Dockerfile.dev
-    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "poetry run python manage.py collectstatic --noinput && \
+            poetry run python manage.py createsu && \
+            poetry run python manage.py runserver 0.0.0.0:8000"
     volumes:
       - static_volume:/www/static
+      - ./server:/app
     env_file:
       - ./.env
     depends_on:

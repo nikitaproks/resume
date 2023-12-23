@@ -33,7 +33,7 @@ services:
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
       - DOMAIN=${DOMAIN}
-      - CAPTCHA_SECRET_KEY=${CAPTCHA_SECRET_KEY}
+      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
     depends_on:
       - db
     networks:
@@ -45,7 +45,7 @@ services:
     environment:
       - DOMAIN=${DOMAIN}
       - FRONTEND_PORT=${FRONTEND_PORT}
-      - CAPTCHA_SECRET_KEY=${CAPTCHA_SECRET_KEY}
+      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
     networks:
       - webnet
   nginx:
@@ -57,7 +57,7 @@ services:
     volumes:
       - static_volume:/www/static
       - uwsgi_socket:/www/socket
-      - /mnt/cert-volume/letsencrypt:/etc/letsencrypt
+      - /mnt/resume-volume/letsencrypt:/etc/letsencrypt
     depends_on:
       - server
       - frontend

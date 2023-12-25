@@ -8,6 +8,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from contact.views import ContactViewSet
+from core.views import DownloadDocument
 
 router = DefaultRouter()
 router.register(r"contacts", ContactViewSet)
@@ -21,4 +22,5 @@ urlpatterns = [
         "api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"
     ),
     path("api/", include(router.urls)),
+    path("api/download/", DownloadDocument.as_view(), name="download"),
 ]

@@ -19,9 +19,8 @@ class ContactViewSet(viewsets.ModelViewSet):
         else:
             return super().get_permissions()
 
-    # TODO: Register and add captcha
-    # def create(self, request, *args, **kwargs):
-    #     recaptcha_response = request.data.get("recaptcha")
-    #     if not verify_recaptcha(recaptcha_response):
-    #         return Response({"error": "Invalid reCAPTCHA."}, status=400)
-    #     return super().create(request, *args, **kwargs)
+    def create(self, request, *args, **kwargs):
+        recaptcha_response = request.data.get("recaptcha")
+        if not verify_recaptcha(recaptcha_response):
+            return Response({"error": "Invalid reCAPTCHA."}, status=400)
+        return super().create(request, *args, **kwargs)

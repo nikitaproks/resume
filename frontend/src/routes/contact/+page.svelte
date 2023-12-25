@@ -11,14 +11,11 @@
   let successMessage = "";
   
   onMount(async () => {
-    const response = await fetch('/contact');
-    const data = await response.json();
-    const recaptcha_site_key = data.variable;
     let checkRecaptcha = setInterval(() => {
       if (window.grecaptcha && window.grecaptcha.ready) {
         window.grecaptcha.ready(() => {
           grecaptchaclient = grecaptcha.render('recaptchabox', {
-            'sitekey': recaptcha_site_key,
+            'sitekey': '6Ldg_DgpAAAAAPAyrh_wAnpbH17B6aktDZlZV_fL',
             'size': 'normal',
             'callback': () => {
               isRecaptchaValid = grecaptcha.getResponse(grecaptchaclient) !== '';

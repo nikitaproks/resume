@@ -20,6 +20,7 @@ services:
     command: sh -c "poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
     volumes:
       - /mnt/resume-volume/static:/www/static
+      - /mnt/resume-volume/media:/www/media
       - uwsgi_socket:/www/socket
     environment:
       - DB_NAME=${DB_NAME}
@@ -32,7 +33,7 @@ services:
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
-      - DOMAIN=${DOMAIN}
+      - DJANGO_CORS_ORIGINS=${DJANGO_CORS_ORIGINS}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
     depends_on:
       - db
@@ -55,8 +56,9 @@ services:
       - "443:443"
     volumes:
       - /mnt/resume-volume/static:/www/static
-      - uwsgi_socket:/www/socket
+      - /mnt/resume-volume/media:/www/media
       - /mnt/resume-volume/letsencrypt:/etc/letsencrypt
+      - uwsgi_socket:/www/socket
     depends_on:
       - server
       - frontend

@@ -9,7 +9,6 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm install
-# If using Yarn, use `yarn install` instead
 
 # Copy the rest of the source code
 COPY . .

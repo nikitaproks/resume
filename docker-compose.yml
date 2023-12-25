@@ -17,9 +17,9 @@ services:
   server:
     image: mykytaproks/resume_server:${TAG}
     restart: unless-stopped
-    command: sh -c "poetry run python manage.py migrate && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
+    command: sh -c "poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
     volumes:
-      - static_volume:/www/static
+      - /mnt/resume-volume/static:/www/static
       - uwsgi_socket:/www/socket
     environment:
       - DB_NAME=${DB_NAME}
@@ -41,11 +41,10 @@ services:
   frontend:
     image: mykytaproks/resume_frontend:${TAG}
     restart: unless-stopped
-    command: sh -c "PORT=${FRONTEND_PORT} node build"
+    command: node build
     environment:
-      - DOMAIN=${DOMAIN}
       - FRONTEND_PORT=${FRONTEND_PORT}
-      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
+      - VITE_RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
     networks:
       - webnet
   nginx:
@@ -55,7 +54,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - static_volume:/www/static
+      - /mnt/resume-volume/static:/www/static
       - uwsgi_socket:/www/socket
       - /mnt/resume-volume/letsencrypt:/etc/letsencrypt
     depends_on:
@@ -64,8 +63,6 @@ services:
     networks:
       - webnet
 volumes:
-  postgres_data:
-  static_volume:
   uwsgi_socket:
 
 networks:

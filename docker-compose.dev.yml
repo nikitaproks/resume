@@ -20,10 +20,12 @@ services:
       context: ./server
       dockerfile: Dockerfile.dev
     command: sh -c "poetry run python manage.py collectstatic --noinput && \
+            poetry run python manage.py migrate && \
             poetry run python manage.py createsu && \
             poetry run python manage.py runserver 0.0.0.0:8000"
     volumes:
       - static_volume:/www/static
+      - media_volume:/www/media
       - ./server:/app
     env_file:
       - ./.env
@@ -35,9 +37,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    command: sh -c "PORT=${FRONTEND_PORT} npm run dev -- --host"
-    env_file:
-      - ./.env
+    volumes:
+      - ./frontend/src:/app/src
+    environment:
+      - VITE_RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+      - FRONTEND_PORT=${FRONTEND_PORT}
     networks:
       - webnet
   nginx:
@@ -49,6 +53,7 @@ services:
       - "80:80"
     volumes:
       - static_volume:/www/static
+      - media_volume:/www/media
     depends_on:
       - server
       - frontend
@@ -57,6 +62,7 @@ services:
 volumes:
   postgres_data:
   static_volume:
+  media_volume:
 
 networks:
     webnet:

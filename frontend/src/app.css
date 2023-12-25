@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+	transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.custom-btn{
+	@apply mx-5 px-10 py-2 border-2 bg-primary text-secondary border-secondary;
+}
+.custom-btn-selected{
+	@apply mx-5 px-10 py-2 border-2 bg-accent text-primary border-accent;
+}
+.custom-btn:hover{
+	@apply bg-accent text-primary border-accent;
+}

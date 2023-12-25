@@ -12,3 +12,5 @@ RUN npm install
 
 # Copy the rest of the source code
 COPY . .
+
+CMD ["npm", "run", "dev", "--", "--host"]

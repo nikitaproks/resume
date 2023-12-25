@@ -6,15 +6,19 @@
 
   let grecaptchaclient;
   let isRecaptchaValid = false;
-  let isFormEmpty = false;
+  let isFormTouched = false;
   let grecaptchaLoaded = false;
+  let successMessage = "";
   
-  onMount(() => {
-    const checkRecaptcha = setInterval(() => {
+  onMount(async () => {
+    const response = await fetch('/contact');
+    const data = await response.json();
+    const recaptcha_site_key = data.variable;
+    let checkRecaptcha = setInterval(() => {
       if (window.grecaptcha && window.grecaptcha.ready) {
         window.grecaptcha.ready(() => {
           grecaptchaclient = grecaptcha.render('recaptchabox', {
-            'sitekey': import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+            'sitekey': recaptcha_site_key,
             'size': 'normal',
             'callback': () => {
               isRecaptchaValid = grecaptcha.getResponse(grecaptchaclient) !== '';
@@ -25,6 +29,16 @@
         grecaptchaLoaded = true;
       }
     }, 100); // Check every 100ms
+
+    // Set a timeout to clear the interval after 5 seconds
+    const timeout = setTimeout(() => {
+      clearInterval(checkRecaptcha);
+    }, 5000);
+
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(checkRecaptcha);
+    };
   });
 
 
@@ -36,6 +50,13 @@
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name, email, message, recaptcha: token })
+
+    })
+    .then(async response => {
+      const result = await response.json();
+      successMessage = result.message;
+      handleReset();
+      grecaptcha.reset(grecaptchaclient); 
     })
     .catch(async error => {
       console.error('Error:', await error)
@@ -54,6 +75,7 @@
     isValidating,
     // handlers
     handleBlur,
+    handleReset,
     handleChange,
     handleSubmit
   } = createForm({
@@ -78,9 +100,9 @@
   });
 
   const updateDirtyState = () => {
-    isFormEmpty = $form.name === "" ||
-                  $form.email === ""||
-                  $form.message === "";
+    isFormTouched = $form.name !== "" ||
+                  $form.email !== ""||
+                  $form.message !== "";
   };
 
   $: updateDirtyState();
@@ -98,7 +120,14 @@
       <span class="label-text text-secondary">Name</span>
     </label>
     <input 
-      id="name" class="input input-bordered input-secondary rounded-none"  name="name" type="text" on:keyup={handleChange} on:change={updateDirtyState} required/>
+      id="name" 
+      class="input input-bordered input-secondary rounded-none"  
+      name="name" 
+      type="text" 
+      on:keyup={handleChange} 
+      on:change={updateDirtyState} 
+      bind:value={$form.name}
+      required/>
     {#if $errors.name && $touched.name}
       <small class="text-error">{$errors.name}</small>
     {/if}
@@ -107,7 +136,15 @@
     <label for="email" class="label">
       <span class="label-text text-secondary">Email</span>
     </label>
-    <input id="email" class="input input-bordered input-secondary rounded-none" name="email" type="email" on:keyup={handleChange} on:change={updateDirtyState} required/>
+    <input 
+      id="email" 
+      class="input input-bordered input-secondary rounded-none" 
+      name="email" 
+      type="email" 
+      on:keyup={handleChange} 
+      on:change={updateDirtyState} 
+      bind:value={$form.email}
+      required/>
     {#if $errors.email && $touched.email}
       <small class="text-error">{$errors.email}</small>
     {/if}
@@ -116,14 +153,28 @@
     <label for="message" class="label">
       <span class="label-text text-secondary">Message</span>
     </label>
-    <textarea id="message" class="textarea textarea-bordered textarea-secondary rounded-none h-40" name="message" type="textarea" on:keyup={handleChange} on:change={updateDirtyState} required></textarea>
+    <textarea 
+      id="message" 
+      class="textarea textarea-bordered textarea-secondary rounded-none h-40" 
+      name="message" 
+      type="textarea" 
+      on:keyup={handleChange} 
+      on:change={updateDirtyState}
+      bind:value={$form.message}
+      required></textarea>
     {#if $errors.message && $touched.message}
       <small class="text-error">{$errors.message}</small>
     {/if}
   </div>
   <div id="recaptchabox" class="py-4"></div>
-  <button type="submit" class="submit-button px-10 py-2 border-2" disabled={!isRecaptchaValid || !$isValid || isFormEmpty}>Submit</button>
+  <button type="submit" class="submit-button px-10 py-2 border-2" disabled={!isRecaptchaValid || !$isValid || !isFormTouched}>Submit</button>
+  {#if successMessage}
+    <div class="text-accent mt-4">
+      {successMessage}
+    </div>
+  {/if}
 </form>
+
 
 
 

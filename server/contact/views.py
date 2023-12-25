@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 
 from contact.models import Contact
@@ -23,4 +23,12 @@ class ContactViewSet(viewsets.ModelViewSet):
         recaptcha_response = request.data.get("recaptcha")
         if not verify_recaptcha(recaptcha_response):
             return Response({"error": "Invalid reCAPTCHA."}, status=400)
-        return super().create(request, *args, **kwargs)
+        response = super().create(request, *args, **kwargs)
+
+        # Check if the creation was successful
+        if response.status_code == status.HTTP_201_CREATED:
+            response.data[
+                "message"
+            ] = "The message has been successfully sent."
+        print(response.data)
+        return response

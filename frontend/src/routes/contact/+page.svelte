@@ -111,7 +111,7 @@
 </script>
 </svelte:head>
 
-<form class="p-4 bg-base-100 sm:w-full md:w-1/2 lg:w-2/5" class:valid={$isValid && isRecaptchaValid} on:submit={handleSubmit}>
+<form class="mt-10 p-4 bg-base-100 sm:w-full md:w-1/2 lg:w-2/5" class:valid={$isValid && isRecaptchaValid} on:submit={handleSubmit}>
   <div class="form-control  py-2">
     <label for="name" class="label">
       <span class="label-text text-secondary">Name</span>

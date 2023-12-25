@@ -71,7 +71,7 @@
       country: 'Germany'
     },
     {
-      title: 'B.Sc. Aerospace Engineering',
+      title: 'M.Sc. Aerospace Engineering',
       period: 'Oct 2019 - Apr 2022',
       achievements: ['Major in control and real-time systems', 'Thesis: “Anomaly detection in telemetry using machine learning techniques”'],
       place: 'Technical University of Munich',

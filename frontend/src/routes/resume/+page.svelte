@@ -1,21 +1,23 @@
 <!-- Resume.svelte -->
 <script>
-  import SkillLevel from '../../lib/components/SkillLevel.svelte';
+  import '../../app.css'
+  import { Progressbar } from 'flowbite-svelte';
   import TimelineCarousel from '../../lib/components/TimelineCarousel.svelte';
+  import Timeline from '../../lib/components/Timeline.svelte';
   import Card from '../../lib/components/Card.svelte';
   import SoftSkills from '../../lib/components/SoftSkills.svelte';
 
   let programmingLanguages = [
-    { skill: 'Python', level: 'Advanced' },
-    { skill: 'Rust', level: 'Basic' },
-    { skill: 'HTML,CSS,JS', level: 'Intermediate' },
+    { skill: 'Python', progress: "75", level: "Advanced" },
+    { skill: 'Rust', progress: "25", level: "Basic" },
+    { skill: 'HTML,CSS,JS', progress: "50", level: "Intermediate" },
   ];
 
   let languages = [
-    { skill: 'English', level: 'Advanced' },
-    { skill: 'German', level: 'Intermediate' },
-    { skill: 'Ukrainian', level: 'Native' },
-    { skill: 'Russian', level: 'Native' },
+    { skill: 'English', progress: "100", level: "Excellent" },
+    { skill: 'German', progress: "50", level: "Intermediate" },
+    { skill: 'Ukrainian', progress: "100", level: "Native" },
+    { skill: 'Russian', progress: "100", level: "Native" },
   ];
 
   let workExperience = [
@@ -148,7 +150,13 @@
   <section >
     <h2 class="section-header">Programming languages</h2>
     {#each programmingLanguages as language}
-      <SkillLevel skill={language.skill} level={language.level} />
+    <div class="my-8">
+      <div class="flex justify-between mb-1 ">
+        <div class="font-medium text-accent">{language.skill}</div>
+        <div class="font-medium text-secondary">{language.level}</div>
+      </div>
+      <Progressbar progress={language.progress} color="gray" divClass="bg-none" size="h-2.5 rounded-none"/>
+    </div>
     {/each}
   </section>
 
@@ -166,7 +174,13 @@
    <section>
     <h2 class="section-header">Languages</h2>
     {#each languages as language}
-      <SkillLevel skill={language.skill} level={language.level} inverted={true}/>
+    <div class="my-8">
+      <div class="flex justify-between mb-1 ">
+        <div class="font-medium text-accent">{language.skill}</div>
+        <div class="font-medium text-secondary">{language.level}</div>
+      </div>
+      <Progressbar progress={language.progress} color="gray" divClass="bg-none" size="h-2.5 rounded-none" />
+    </div>
     {/each}
   </section>
 
@@ -180,13 +194,3 @@
 </div>
 
 
-
-<style>
-  section {
-    @apply bg-primary my-2 p-6; 
-  }
-
-  .section-header { 
-    @apply text-secondary py-4 mb-4; 
-  }
-</style>

@@ -2,6 +2,8 @@
   
   import { onMount } from 'svelte';
   import { createForm } from "svelte-forms-lib";
+  import { Label, Input, Textarea, Helper } from 'flowbite-svelte';
+  import "../../app.css";
   import * as yup from "yup";
 
   let grecaptchaclient;
@@ -111,14 +113,14 @@
 </script>
 </svelte:head>
 
-<form class="mt-10 p-4 bg-base-100 sm:w-full md:w-1/2 lg:w-2/5" class:valid={$isValid && isRecaptchaValid} on:submit={handleSubmit}>
+<form class="my-20 p-4 bg-base-100 sm:w-full md:w-1/2 lg:w-2/5" class:valid={$isValid && isRecaptchaValid} on:submit={handleSubmit}>
   <div class="form-control  py-2">
-    <label for="name" class="label">
+    <Label for="name" class="label">
       <span class="label-text text-secondary">Name</span>
-    </label>
-    <input 
+    </Label>
+    <Input 
       id="name" 
-      class="input input-bordered input-secondary rounded-none"  
+      class="rounded-none bg-primary border-secondary"
       name="name" 
       type="text" 
       on:keyup={handleChange} 
@@ -126,16 +128,16 @@
       bind:value={$form.name}
       required/>
     {#if $errors.name && $touched.name}
-      <small class="text-error">{$errors.name}</small>
+      <Helper class="text-accent">{$errors.name}</Helper>
     {/if}
   </div>
   <div class="form-control  py-2">
-    <label for="email" class="label">
+    <Label for="email" class="label">
       <span class="label-text text-secondary">Email</span>
-    </label>
-    <input 
+    </Label>
+    <Input 
       id="email" 
-      class="input input-bordered input-secondary rounded-none" 
+      class="rounded-none bg-primary border-secondary" 
       name="email" 
       type="email" 
       on:keyup={handleChange} 
@@ -143,24 +145,25 @@
       bind:value={$form.email}
       required/>
     {#if $errors.email && $touched.email}
-      <small class="text-error">{$errors.email}</small>
+      <Helper class="text-accent">{$errors.email}</Helper>
     {/if}
   </div>
   <div class="form-control py-2">
-    <label for="message" class="label">
+    <Label for="message" class="label">
       <span class="label-text text-secondary">Message</span>
-    </label>
-    <textarea 
+    </Label>
+    <Textarea 
       id="message" 
-      class="textarea textarea-bordered textarea-secondary rounded-none h-40" 
       name="message" 
-      type="textarea" 
+      class="rounded-none bg-primary border-secondary"  
+      rows=10
+      placeholder= 'Leave a your message here...'
       on:keyup={handleChange} 
       on:change={updateDirtyState}
       bind:value={$form.message}
-      required></textarea>
+      required></Textarea>
     {#if $errors.message && $touched.message}
-      <small class="text-error">{$errors.message}</small>
+      <Helper class="text-accent">{$errors.message}</Helper>
     {/if}
   </div>
   <div id="recaptchabox" class="py-4"></div>

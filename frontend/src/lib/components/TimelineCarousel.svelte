@@ -18,9 +18,9 @@
 
     <h2 class="text-secondary">{header}</h2>
     <div>
-      <button class="btn btn-circle shadow-none btn-primary" on:click={() => scroll('prev')}>«</button>
+      <button class="btn btn-circle shadow-none text-accent" on:click={() => scroll('prev')}>«</button>
       <span class="text-sm text-accent">{counterText}</span>
-      <button class="btn btn-circle shadow-none btn-primary" on:click={() => scroll('next')}>»</button>
+      <button class="btn btn-circle shadow-none text-accent" on:click={() => scroll('next')}>»</button>
     </div>
 </div>
 

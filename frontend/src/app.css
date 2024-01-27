@@ -6,12 +6,63 @@ body {
 	transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
+@layer utilities {
+	.bg-primary {
+	  @apply bg-primary-light dark:bg-primary-dark !important;
+	}
+
+	.bg-secondary {
+		@apply bg-secondary-light dark:bg-secondary-dark !important;
+	}
+
+	.bg-accent {
+		@apply bg-accent-light dark:bg-accent-dark !important;
+	}
+  
+	.text-primary {
+	  @apply text-primary-light dark:text-primary-dark !important; 
+	}
+	.text-secondary {
+		@apply text-secondary-light dark:text-secondary-dark !important; 
+	}
+	.text-accent {
+		@apply text-accent-light dark:text-accent-dark !important; 
+	}
+
+	.border-primary {
+		@apply border-primary-light dark:border-primary-dark !important; 
+	  }
+	.border-secondary {
+		@apply border-secondary-light dark:border-secondary-dark !important; 
+	}
+	.border-accent {
+		@apply border-accent-light dark:border-accent-dark !important; 
+	}
+
+	.ring-none {
+		@apply ring-transparent dark:ring-transparent !important; 
+	  }
+	.ring-secondary {
+		@apply ring-secondary-light dark:ring-secondary-dark !important; 
+	}
+	.ring-accent {
+		@apply ring-accent-light dark:ring-accent-dark !important; 
+	}
+
+  }
+section {
+    @apply bg-primary my-2 p-6; 
+  }
+
+.section-header { 
+    @apply text-secondary py-4 mb-4; 
+  }
 .custom-btn{
-	@apply mx-5 px-10 py-2 border-2 bg-primary text-secondary border-secondary;
+	@apply mx-5 px-10 py-2 border-2 bg-primary text-secondary border-secondary !important;
 }
 .custom-btn-selected{
-	@apply mx-5 px-10 py-2 border-2 bg-accent text-primary border-accent;
+	@apply mx-5 px-10 py-2 border-2 bg-accent text-primary border-accent !important;
 }
 .custom-btn:hover{
-	@apply bg-accent text-primary border-accent;
+	@apply bg-accent text-primary border-accent !important;
 }

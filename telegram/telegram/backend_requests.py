@@ -71,10 +71,11 @@ class API:
         return self._send_request("POST", url, data)
 
 
-def authorize(api: API, message: Message) -> dict[str, Any] | str:
+def authorize(api: API, message: Message) -> dict[str, Any] | str | None:
     response = api.get_user(message.from_user.id)
     if not response:
-        return "Something went wrong!"
-    if response.status == 200:
+        return None
+    print(response.json())
+    if response.status != 200:
         return "User is not registered. Please, use /register."
     return response.json()

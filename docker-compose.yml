@@ -17,9 +17,7 @@ services:
   server:
     image: mykytaproks/resume_server:${TAG}
     restart: unless-stopped
-    command: sh -c "poetry run python manage.py collectstatic --noinput && \
-            poetry run python manage.py createsu && \
-            poetry run uwsgi --ini uwsgi.ini"
+    command: sh -c "poetry run python manage.py collectstatic --noinput && poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
     volumes:
       - /mnt/resume-volume/static:/www/static
       - /mnt/resume-volume/media:/www/media
@@ -76,6 +74,8 @@ services:
     depends_on:
       - server
       - db
+    networks:
+      - webnet
 volumes:
   uwsgi_socket:
 

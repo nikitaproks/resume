@@ -45,7 +45,12 @@ subscriptions_router = Router()
 @subscriptions_router.message(Command("subscriptions"))
 async def command_subscriptions(message: Message) -> None:
     api = API(API_KEY)
-    authorize(api, message)
+    if not authorize(api, message):
+        await message.answer(
+            "You are not registered!",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return
     response = api.list_subscriptions(
         message.from_user.id,
     )
@@ -76,7 +81,12 @@ async def command_subscriptions(message: Message) -> None:
 @subscribe_router.message(Command("subscribe"))
 async def command_subscribe(message: Message, state: FSMContext) -> None:
     api = API(API_KEY)
-    authorize(api, message)
+    if not authorize(api, message):
+        await message.answer(
+            "You are not registered!",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return
     await state.set_state(Subscribe.ticker)
     await message.answer(
         "Enter ticker:",
@@ -135,7 +145,12 @@ async def subscribe(message: Message, state: FSMContext) -> None:
 @unsubscribe_router.message(Command("unsubscribe"))
 async def command_unsubscribe(message: Message, state: FSMContext) -> None:
     api = API(API_KEY)
-    authorize(api, message)
+    if not authorize(api, message):
+        await message.answer(
+            "You are not registered!",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return
     response = api.list_subscriptions(
         message.from_user.id,
     )

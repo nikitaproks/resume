@@ -1,9 +1,7 @@
 <script>
-  
   import { onMount } from 'svelte';
   import { createForm } from "svelte-forms-lib";
   import { Label, Input, Textarea, Helper } from 'flowbite-svelte';
-  import "../../app.css";
   import * as yup from "yup";
 
   let grecaptchaclient;
@@ -174,21 +172,4 @@
     </div>
   {/if}
 </form>
-
-
-
-
-
-<style>
-  .submit-button:valid {
-    @apply text-secondary bg-primary border-secondary;
-  }
-  .submit-button:valid:hover{
-    @apply text-primary bg-accent border-accent;
-  }
-  .submit-button:disabled {
-    background: grey;
-  }
-</style>
-
 

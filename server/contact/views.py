@@ -30,5 +30,4 @@ class ContactViewSet(viewsets.ModelViewSet):
             response.data[
                 "message"
             ] = "The message has been successfully sent."
-        print(response.data)
         return response

@@ -7,11 +7,14 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from core.views import DownloadDocument, UserViewSet
 from contact.views import ContactViewSet
-from core.views import DownloadDocument
+from stocks.views import TelegramSubscriptionViewSet
 
 router = DefaultRouter()
+router.register(r"users", UserViewSet)
 router.register(r"contacts", ContactViewSet)
+router.register(r"telegram/subscriptions", TelegramSubscriptionViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -21,6 +24,6 @@ urlpatterns = [
     path(
         "api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"
     ),
-    path("api/", include(router.urls)),
     path("api/download/", DownloadDocument.as_view(), name="download"),
+    path("api/", include(router.urls)),
 ]

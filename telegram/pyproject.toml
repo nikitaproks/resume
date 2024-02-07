@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "telegram"
+version = "0.1.0"
+description = ""
+authors = ["Mykyta Prokaiev <mykytaprokaiev@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiogram = "^3.3.0"
+python-dotenv = "^1.0.1"
+urllib3 = "^2.1.0"
+email-validator = "^2.1.0.post1"
+yfinance = "^0.2.36"
+requests = "^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

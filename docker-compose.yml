@@ -17,7 +17,9 @@ services:
   server:
     image: mykytaproks/resume_server:${TAG}
     restart: unless-stopped
-    command: sh -c "poetry run python manage.py createsu && poetry run uwsgi --ini uwsgi.ini"
+    command: sh -c "poetry run python manage.py collectstatic --noinput && \
+            poetry run python manage.py createsu && \
+            poetry run uwsgi --ini uwsgi.ini"
     volumes:
       - /mnt/resume-volume/static:/www/static
       - /mnt/resume-volume/media:/www/media
@@ -65,8 +67,19 @@ services:
       - frontend
     networks:
       - webnet
+  telegram:
+    build: 
+      context: ./telegram
+      dockerfile: Dockerfile
+    command: sh -c "poetry run python telegram/main.py"
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - API_KEY=${BACKEND_API_KEY}
+    depends_on:
+      - server
+      - db
 volumes:
   uwsgi_socket:
 
 networks:
-    webnet:
+  webnet:

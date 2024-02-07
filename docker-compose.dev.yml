@@ -59,10 +59,27 @@ services:
       - frontend
     networks:
       - webnet
+  telegram:
+    build: 
+      context: ./telegram
+      dockerfile: Dockerfile.dev
+    command: sh -c "poetry run python telegram/main.py"
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - API_KEY=${BACKEND_API_KEY}
+    depends_on:
+      - server
+      - db
+    volumes:
+      - ./telegram:/app
+    networks:
+      - webnet
+
+
 volumes:
   postgres_data:
   static_volume:
   media_volume:
 
 networks:
-    webnet:
+  webnet:

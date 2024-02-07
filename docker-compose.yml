@@ -68,9 +68,7 @@ services:
     networks:
       - webnet
   telegram:
-    build: 
-      context: ./telegram
-      dockerfile: Dockerfile
+    image: mykytaproks/resume_telegram:${TAG}
     command: sh -c "poetry run python telegram/main.py"
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}

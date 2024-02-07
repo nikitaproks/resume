@@ -2,6 +2,8 @@ name: Deploy Nginx
 
 on:
   push:
+    paths:
+      - 'nginx/**/*'
     tags:
       - '*'
 

@@ -2,6 +2,8 @@ name: Deploy Server
 
 on:
   push:
+    paths:
+      - 'server/**/*'
     tags:
       - '*'
 

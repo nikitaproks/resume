@@ -20,7 +20,6 @@ class HasAPIKey(BaseHasAPIKey):
     model = UserAPIKey  # Or a custom model
 
     def get_key(self, request):
-        print(request.META)
         if request.META.get("HTTP_AUTHORIZATION"):
             return request.META["HTTP_AUTHORIZATION"].split()[1]
         return None

@@ -25,7 +25,16 @@ class API:
                 url,
                 headers=self.headers,
                 body=json.dumps(data) if data else None,
+                redirect=False,
             )
+            if response.status == 301:
+                redirect_url = response.getheader("Location")
+                response = self.http.request(
+                    method,
+                    redirect_url,
+                    headers=self.headers,
+                    body=json.dumps(data) if data else None,
+                )
             return response
         except Exception as e:
             logger.error(e)
@@ -75,7 +84,6 @@ def authorize(api: API, message: Message) -> dict[str, Any] | str | None:
     response = api.get_user(message.from_user.id)
     if not response:
         return None
-    print(response.json())
     if response.status != 200:
         return "User is not registered. Please, use /register."
     return response.json()

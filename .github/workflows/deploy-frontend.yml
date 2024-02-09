@@ -2,10 +2,12 @@ name: Deploy Frontend
 
 on:
   push:
+    branches:    
+      - main
     paths:
-      - 'frontend/**/*'
+      - 'frontend/**'
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build-and-deploy:

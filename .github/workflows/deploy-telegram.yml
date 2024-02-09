@@ -3,7 +3,7 @@ name: Deploy Telegram
 on:
   push:
     paths:
-      - 'telegram/**/*'
+      - 'telegram/**'
     tags:
       - '*'
 

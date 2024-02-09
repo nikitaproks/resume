@@ -3,7 +3,7 @@ name: Deploy Analysis
 on:
   push:
     paths:
-      - 'analysis/**/*'
+      - 'analysis/**'
     tags:
       - '*'
 

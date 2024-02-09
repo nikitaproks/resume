@@ -3,7 +3,7 @@ name: Deploy Nginx
 on:
   push:
     paths:
-      - 'nginx/**/*'
+      - 'nginx/**'
     tags:
       - '*'
 

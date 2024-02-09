@@ -70,8 +70,19 @@ services:
     depends_on:
       - server
       - db
-    volumes:
-      - ./telegram:/app
+    networks:
+      - webnet
+  analysis:
+    build: 
+      context: ./analysis
+      dockerfile: Dockerfile.dev
+    command: sh -c "poetry run python analysis/main.py"
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - API_KEY=${BACKEND_API_KEY}
+    depends_on:
+      - server
+      - db
     networks:
       - webnet
 

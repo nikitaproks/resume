@@ -6,8 +6,6 @@ on:
       - main
     paths:
       - 'frontend/**'
-    paths-ignore:
-      - 'server/**'
     tags:
       - 'v*'
 

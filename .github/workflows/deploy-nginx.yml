@@ -2,10 +2,12 @@ name: Deploy Nginx
 
 on:
   push:
+    branches:    
+      - main
     paths:
-      - 'nginx/**'
+      - './nginx/**'
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build-and-deploy:

@@ -2,10 +2,12 @@ name: Deploy Telegram
 
 on:
   push:
+    branches:    
+      - main
     paths:
-      - 'telegram/**'
+      - './telegram/**'
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build-and-deploy:

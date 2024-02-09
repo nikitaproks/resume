@@ -2,10 +2,12 @@ name: Deploy Analysis
 
 on:
   push:
+    branches:    
+      - main
     paths:
-      - 'analysis/**'
+      - './analysis/**'
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build-and-deploy:

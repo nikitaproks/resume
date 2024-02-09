@@ -2,10 +2,12 @@ name: Deploy Server
 
 on:
   push:
+    branches:    
+      - main
     paths:
-      - 'server/**'
+      - './server/**'
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build-and-deploy:

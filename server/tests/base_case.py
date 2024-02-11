@@ -1,7 +1,6 @@
+from core.models import UserAPIKey, UserProfile
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
-
-from core.models import UserAPIKey, UserProfile
 
 
 class APIBaseTest(APITestCase):

@@ -1,10 +1,12 @@
+from unittest.mock import patch, Mock
+
 from django.contrib.auth.models import User
 from rest_framework import status
 
-from tests.base import APIBaseTest
 
 from core.models import UserProfile
-from stocks.models import Subscription, Stock
+from stocks.models import Stock, Subscription, State
+from tests.base_case import APIBaseTest
 
 
 class TestTelegramSubscription(APIBaseTest):
@@ -128,3 +130,57 @@ class TestTelegramSubscription(APIBaseTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.subscription.refresh_from_db()
         self.assertFalse(self.subscription.is_active)
+
+
+class TestTriggerAnalysis(APIBaseTest):
+    def setUp(self):
+        super().setUp()
+        self.url = "/api/analysis/"
+
+    @patch("stocks.views.analytics_done")
+    @patch("stocks.views.analyse_stock")
+    @patch("stocks.views.get_stock_history")
+    def test_state_not_changed(
+        self, mock_get_stock_history, mock_analyse_stock, mock_analytics_done
+    ):
+        user = User.objects.create(username="test_user2", password="1234")
+        stock = Stock.objects.create(ticker="AAPL")
+        Subscription.objects.create(user=user, stock=stock)
+
+        rsi = Mock()
+        rsi.iloc = [70]
+        bb = Mock()
+        bb.iloc = [0.8]
+        mock_history = {"RSI": rsi, "BBands%": bb}
+        mock_get_stock_history.return_value = mock_history
+        mock_analyse_stock.return_value = stock.state
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_analytics_done.send.assert_not_called()
+
+    @patch("stocks.views.analytics_done")
+    @patch("stocks.views.analyse_stock")
+    @patch("stocks.views.get_stock_history")
+    def test_state_changed(
+        self, mock_get_stock_history, mock_analyse_stock, mock_analytics_done
+    ):
+        user = User.objects.create(username="test_user2", password="1234")
+        stock = Stock.objects.create(ticker="AAPL")
+        new_state, _ = State.objects.get_or_create(name="Buy")
+        Subscription.objects.create(user=user, stock=stock)
+
+        rsi = Mock()
+        rsi.iloc = [70]
+        bb = Mock()
+        bb.iloc = [0.8]
+        mock_history = {"RSI": rsi, "BBands%": bb}
+        mock_get_stock_history.return_value = mock_history
+        mock_analyse_stock.return_value = new_state
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_analytics_done.send.assert_called_once()
+
+        stock.refresh_from_db()
+        self.assertEqual(stock.state, new_state)

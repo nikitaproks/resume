@@ -2,6 +2,11 @@ from django.contrib.auth.models import User
 from django.db import models
 
 
+def default_state():
+    state, _ = State.objects.get_or_create(name="Hold")
+    return state
+
+
 class Indicator(models.Model):
     name = models.CharField(max_length=25, unique=True)
     description = models.TextField()
@@ -26,8 +31,8 @@ class State(models.Model):
 class StateIndicator(models.Model):
     state = models.ForeignKey(State, on_delete=models.CASCADE)
     indicator = models.ForeignKey(Indicator, on_delete=models.CASCADE)
-    lower_threshold = models.FloatField(null=True)
-    upper_threshold = models.FloatField(null=True)
+    lower_threshold = models.FloatField()
+    upper_threshold = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -41,7 +46,10 @@ class StateIndicator(models.Model):
 class Stock(models.Model):
     ticker = models.CharField(max_length=10, unique=True)
     state = models.ForeignKey(
-        State, on_delete=models.SET_NULL, null=True, related_name="stocks"
+        State,
+        on_delete=models.SET_DEFAULT,
+        default=default_state,
+        related_name="stocks",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

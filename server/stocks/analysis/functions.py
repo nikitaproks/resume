@@ -2,8 +2,9 @@ import io
 
 import mplfinance as mpf
 import yfinance as yf
+from django.db.models import Q
 from pandas import DataFrame
-from stocks.models import Stock, StockState
+from stocks.models import State, Stock
 from technical_analysis import indicators
 
 
@@ -27,7 +28,7 @@ def get_fig_buffer(history: DataFrame, symbol: str) -> io.BytesIO:
         mpf.make_addplot(history["BB_upper"], color="green", width=0.75),
         mpf.make_addplot(history["BB_lower"], color="red", width=0.75),
         mpf.make_addplot(
-            history["BB_percent"],
+            history["BBands%"],
             panel=1,
             color="purple",
             width=0.75,
@@ -68,21 +69,24 @@ def get_stock_history(stock: Stock):
         history["SMA20"],
         history["BB_upper"],
     ) = calculate_bollinger_bands(history["Close"])
-    history["BB_percent"] = (history["Close"] - history["BB_lower"]) / (
+    history["BBands%"] = (history["Close"] - history["BB_lower"]) / (
         history["BB_upper"] - history["BB_lower"]
     )
     return history
 
 
-def analyse_stock(history: DataFrame) -> str:
-    current_rsi = history["RSI"].iloc[-1]
-    current_bb_percent = history["BB_percent"].iloc[-1]
+def analyse_stock(current_rsi: float, current_bb_percent: float) -> str:
+    states_with_either_condition = State.objects.filter(
+        Q(
+            stateindicator__indicator__name="RSI",
+            stateindicator__lower_threshold__lte=current_rsi,
+            stateindicator__upper_threshold__gt=current_rsi,
+        )
+        | Q(
+            stateindicator__indicator__name="BBands%",
+            stateindicator__lower_threshold__lte=current_bb_percent,
+            stateindicator__upper_threshold__gt=current_bb_percent,
+        )
+    ).distinct()
 
-    state = StockState.objects.filter(
-        rsi_bottom_threshold__lte=current_rsi,
-        rsi_top_threshold__gte=current_rsi,
-        bbands_percent_bottom_threshold__lte=current_bb_percent,
-        bbands_percent_top_threshold__gte=current_bb_percent,
-    ).first()
-
-    return state
+    return states_with_either_condition.first()

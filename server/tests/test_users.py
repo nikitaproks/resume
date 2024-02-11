@@ -1,9 +1,7 @@
+from core.models import InviteCode, UserProfile
 from django.contrib.auth.models import User
 from rest_framework import status
-
-from tests.base import APIBaseTest
-
-from core.models import UserProfile, InviteCode
+from tests.base_case import APIBaseTest
 
 
 class TestSubscription(APIBaseTest):

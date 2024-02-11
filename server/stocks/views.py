@@ -16,6 +16,7 @@ from stocks.serializers import (
     SubscriptionSerializer,
     TelegramSubscriptionSerializer,
 )
+from stocks.signals.signals import analytics_done
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +167,6 @@ class TelegramSubscriptionViewSet(
         )
 
 
-# TODO: Write tests for this view
 class TriggerAnalysis(APIView):
     permission_classes = [HasAPIKey]
 
@@ -178,12 +178,17 @@ class TriggerAnalysis(APIView):
         for stock in active_stocks:
             logger.info(f"Analyzing {stock.ticker}")
             history = get_stock_history(stock)
-            # TODO: Implement this function
-            new_state = analyse_stock(stock, history)
 
-            if new_state:
+            current_rsi = history["RSI"].iloc[-1]
+            current_bbands_percent = history["BBands%"].iloc[-1]
+            new_state = analyse_stock(current_rsi, current_bbands_percent)
+
+            if new_state != stock.state:
                 stock.state = new_state
                 stock.save()
+                analytics_done.send(
+                    sender=Stock.__class__, instance=stock, history=history
+                )
                 logger.info(f"{stock} has new state: {new_state}")
 
         return Response(status=status.HTTP_200_OK)

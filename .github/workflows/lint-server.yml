@@ -23,7 +23,7 @@ jobs:
                 python -m pip install --upgrade pip
                 pip install flake8 mypy poetry poetry-plugin-export
                 cd server
-                poetry export -f requirements.txt --output requirements.txt
+                poetry export -f requirements.txt --output requirements.txt --dev
                 pip install -r requirements.txt
 
         # # Run Flake8

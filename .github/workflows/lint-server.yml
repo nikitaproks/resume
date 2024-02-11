@@ -25,6 +25,7 @@ jobs:
                 cd server
                 poetry install
                 poetry export -f requirements.txt --output requirements.txt --with dev --without-hashes
+                cat requirements.txt
                 pip install -r requirements.txt
 
         # # Run Flake8

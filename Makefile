@@ -16,3 +16,6 @@ test-server:
 	docker-compose -f docker-compose.dev.yml up -d server
 	docker compose exec server poetry run python manage.py test tests
 	docker-compose down
+
+test-scheduler:
+	cd scheduler && poetry run pytest tests

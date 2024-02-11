@@ -1,18 +1,17 @@
 import os
 
-from django.http import HttpResponse
 from django.contrib.auth.models import User
-
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
-from rest_framework.decorators import action
+from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 from rest_framework_api_key.permissions import BaseHasAPIKey
 
-from core.models import Document, UserProfile, UserAPIKey, InviteCode
+from core.models import Document, InviteCode, UserAPIKey, UserProfile
 from core.serializers import TelegramUserSerializer
 
 

@@ -1,10 +1,50 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
+
+
+class Indicator(models.Model):
+    name = models.CharField(max_length=25, unique=True)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class State(models.Model):
+    name = models.CharField(max_length=25, unique=True)
+    description = models.TextField()
+    indicators = models.ManyToManyField(
+        Indicator, through="StateIndicator", related_name="states"
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class StateIndicator(models.Model):
+    state = models.ForeignKey(State, on_delete=models.CASCADE)
+    indicator = models.ForeignKey(Indicator, on_delete=models.CASCADE)
+    lower_threshold = models.FloatField(null=True)
+    upper_threshold = models.FloatField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (("state", "indicator"),)
+
+    def __str__(self):
+        return f"{self.state} - {self.indicator}"
 
 
 class Stock(models.Model):
     ticker = models.CharField(max_length=10, unique=True)
+    state = models.ForeignKey(
+        State, on_delete=models.SET_NULL, null=True, related_name="stocks"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.ticker

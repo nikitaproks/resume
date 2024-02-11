@@ -69,20 +69,22 @@ services:
       - API_KEY=${BACKEND_API_KEY}
     depends_on:
       - server
+      - nginx
       - db
     networks:
       - webnet
-  analysis:
+  scheduler:
     build: 
-      context: ./analysis
+      context: ./scheduler
       dockerfile: Dockerfile.dev
-    command: sh -c "poetry run python analysis/main.py"
+    command: sh -c "poetry run python scheduler/main.py"
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
-      - API_KEY=${BACKEND_API_KEY}
+      - BACKEND_API_KEY=${BACKEND_API_KEY}
     depends_on:
-      - server
       - db
+      - nginx
+      - server
     networks:
       - webnet
 

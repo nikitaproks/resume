@@ -1,15 +1,37 @@
-from rest_framework import mixins, status
-from rest_framework.response import Response
-from rest_framework.decorators import action
+import logging
 
 from core.models import UserProfile
-from core.views import APIkeyViewSet
+from core.views import APIkeyViewSet, HasAPIKey
+from rest_framework import mixins, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from stocks.analysis.functions import (
+    analyse_stock,
+    get_stock_history,
+)
 from stocks.models import Stock, Subscription
 from stocks.serializers import (
-    TelegramSubscriptionSerializer,
     SubscriptionSerializer,
+    TelegramSubscriptionSerializer,
 )
+
+logger = logging.getLogger(__name__)
+
+
+class SubscriptionViewSet(APIkeyViewSet, mixins.ListModelMixin):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionSerializer
+
+    def get_queryset(self):
+        queryset = Subscription.objects.all()
+        is_active: str | None = self.request.query_params.get(
+            "is_active", None
+        )
+        if is_active:
+            queryset = queryset.filter(is_active=is_active.capitalize())
+        return queryset
 
 
 class TelegramSubscriptionViewSet(
@@ -95,7 +117,6 @@ class TelegramSubscriptionViewSet(
             status=status.HTTP_201_CREATED,
         )
 
-    # TODO: Implement tests
     @action(detail=False, methods=["post"])
     def unsubscribe(self, request, *args, **kwargs):
         # Create serializer
@@ -143,3 +164,26 @@ class TelegramSubscriptionViewSet(
             {"success": "User unsubscribed from stock"},
             status=status.HTTP_200_OK,
         )
+
+
+# TODO: Write tests for this view
+class TriggerAnalysis(APIView):
+    permission_classes = [HasAPIKey]
+
+    def get(self, request, format=None):
+        active_stocks = Stock.objects.filter(
+            subscriptions__is_active=True
+        ).distinct()
+
+        for stock in active_stocks:
+            logger.info(f"Analyzing {stock.ticker}")
+            history = get_stock_history(stock)
+            # TODO: Implement this function
+            new_state = analyse_stock(stock, history)
+
+            if new_state:
+                stock.state = new_state
+                stock.save()
+                logger.info(f"{stock} has new state: {new_state}")
+
+        return Response(status=status.HTTP_200_OK)

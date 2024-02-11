@@ -1,11 +1,11 @@
-name: Deploy Analysis
+name: Deploy Scheduler
 
 on:
   push:
     branches:    
       - main
     paths:
-      - './analysis/**'
+      - './scheduler/**'
     tags:
       - 'v*'
 
@@ -23,13 +23,13 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/resume_analysis:${{ github.ref_name }} ./analysis
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/resume_scheduler:${{ github.ref_name }} ./scheduler
 
     - name: Tag Docker image
-      run: docker tag ${{ secrets.DOCKERHUB_USERNAME }}/resume_analysis:${{ github.ref_name }} ${{ secrets.DOCKERHUB_USERNAME }}/resume_analysis:latest
+      run: docker tag ${{ secrets.DOCKERHUB_USERNAME }}/resume_scheduler:${{ github.ref_name }} ${{ secrets.DOCKERHUB_USERNAME }}/resume_scheduler:latest
       
     - name: Push Docker image
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/resume_analysis:${{ github.ref_name }}
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/resume_scheduler:${{ github.ref_name }}
 
     - name: Push latest
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/resume_analysis:latest
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/resume_scheduler:latest

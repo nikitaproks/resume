@@ -36,6 +36,7 @@ services:
       - DJANGO_CORS_ORIGINS=${DJANGO_CORS_ORIGINS}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     depends_on:
       - db
     networks:
@@ -76,12 +77,12 @@ services:
       - db
     networks:
       - webnet
-  analysis:
-    image: mykytaproks/resume_analysis:${TAG}
-    command: sh -c "poetry run python analysis/main.py"
+  scheduler:
+    image: mykytaproks/resume_scheduler:${TAG}
+    command: sh -c "poetry run python scheduler/main.py"
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
-      - API_KEY=${BACKEND_API_KEY}
+      - BACKEND_API_KEY=${BACKEND_API_KEY}
     depends_on:
       - server
       - db

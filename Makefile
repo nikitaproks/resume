@@ -13,8 +13,9 @@ test:
 
 test-server:
 	docker-compose -f docker-compose.dev.yml up -d db
-	docker-compose -f docker-compose.dev.yml up -d server
+	docker-compose -f docker-compose.dev.yml up -d server --build
 	docker compose exec server poetry run python manage.py test tests
+	docker compose exec server poetry run pytest tests
 	docker-compose down
 
 test-scheduler:

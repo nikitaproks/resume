@@ -200,21 +200,22 @@ class TriggerAnalysis(APIView):
             # current_rsi = history["RSI"].iloc[-1]
             # current_rsi_sma14 = history["RSI_SMA14"].iloc[-1]
             current_bbands_percent = history["BBands%"].iloc[-1]
-            current_state = analyse_stock(current_bbands_percent)
+            new_state = analyse_stock(current_bbands_percent)
 
-            if telegram_id and current_state != State.objects.get(name="Hold"):
+            if telegram_id and new_state != State.objects.get(name="Hold"):
                 analytics_done.send(
                     sender=Stock.__class__,
                     instance=stock,
                     history=history,
                     telegram_ids=[telegram_id],
+                    new_state=new_state,
                 )
                 continue
 
-            if not telegram_id and current_state != stock.state:
-                stock.state = current_state
+            if not telegram_id and new_state != stock.state:
+                stock.state = new_state
                 stock.save()
-                logger.info(f"{stock} has new state: {current_state}")
+                logger.info(f"{stock} has new state: {new_state}")
                 analytics_done.send(
                     sender=Stock.__class__,
                     instance=stock,

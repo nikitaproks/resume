@@ -4,7 +4,7 @@ from pandas import DataFrame
 
 from django.dispatch import Signal, receiver
 from stocks.analysis.functions import get_fig_buffer
-from stocks.models import Stock, Subscription
+from stocks.models import Stock, Subscription, State
 from stocks.signals.classes import TelegramAPI
 
 from server.settings import TELEGRAM_TOKEN
@@ -19,6 +19,7 @@ def send_telegram_notification(
     instance: Stock,
     history: DataFrame,
     telegram_ids: list[int] | None = None,
+    new_state: State | None = None,
     **kwargs,
 ):
     if history.empty:
@@ -45,8 +46,9 @@ def send_telegram_notification(
     buffer = get_fig_buffer(history, instance.ticker)
     telegram_api = TelegramAPI(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}")
     for telegram_id in telegram_ids:
+        state = new_state if new_state else instance.state
         message = (
-            f"{instance.state} {instance.ticker}"
+            f"{state.name.upper()} {instance.ticker}"
             f"\nPrice: {current_price:.2f}\nRSI: {current_rsi:.2f}\nRSI_SMA14: {current_rsi_sma14:.2f}\nBBands%: {current_bbands_percent:.2f}"
         )
         telegram_api.send_photo_from_buffer(telegram_id, buffer, message)

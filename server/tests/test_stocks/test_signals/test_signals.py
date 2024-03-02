@@ -78,7 +78,7 @@ class TestSendTelegramNotification(TestCase):
             history=mock_history,
             telegram_ids=[self.user_profile.telegram_id],
         )
-        mock_get_fig_buffer.assert_not_called()
+        mock_get_fig_buffer.assert_called_once()
         mock_telegram_api.send_photo_from_buffer.assert_called_once_with(
             self.user_profile.telegram_id, ANY, ANY
         )

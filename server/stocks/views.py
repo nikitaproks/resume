@@ -197,10 +197,10 @@ class TriggerAnalysis(APIView):
             logger.info(f"Analyzing {stock.ticker}")
             history: DataFrame = get_stock_history(stock)
 
-            current_rsi = history["RSI"].iloc[-1]
+            # current_rsi = history["RSI"].iloc[-1]
             # current_rsi_sma14 = history["RSI_SMA14"].iloc[-1]
             current_bbands_percent = history["BBands%"].iloc[-1]
-            current_state = analyse_stock(current_rsi, current_bbands_percent)
+            current_state = analyse_stock(current_bbands_percent)
 
             if telegram_id and current_state != State.objects.get(name="Hold"):
                 analytics_done.send(

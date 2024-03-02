@@ -1,4 +1,5 @@
-from unittest.mock import patch, Mock
+from unittest.mock import patch
+from pandas import DataFrame
 
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -136,51 +137,112 @@ class TestTriggerAnalysis(APIBaseTest):
     def setUp(self):
         super().setUp()
         self.url = "/api/analysis/"
+        self.mock_analytics_done = patch("stocks.views.analytics_done").start()
+        self.mock_get_stock_history = patch(
+            "stocks.views.get_stock_history"
+        ).start()
 
-    @patch("stocks.views.analytics_done")
+        self.user = User.objects.create(username="test_user", password="1234")
+        self.user_profile = UserProfile.objects.get(user=self.user)
+        self.user_profile.telegram_id = 1234
+        self.user_profile.save()
+
+    def test_no_active_stocks(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"message": "No active stocks"})
+
+    def test_telegram_id_provided_no_active_stocks(self):
+        response = self.client.get(self.url + "?telegram_id=1234")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"message": "No active stocks"})
+
     @patch("stocks.views.analyse_stock")
-    @patch("stocks.views.get_stock_history")
-    def test_state_not_changed(
-        self, mock_get_stock_history, mock_analyse_stock, mock_analytics_done
-    ):
-        user = User.objects.create(username="test_user2", password="1234")
+    def test_telegram_id_provided_current_state_hold(self, mock_analyse_stock):
         stock = Stock.objects.create(ticker="AAPL")
-        Subscription.objects.create(user=user, stock=stock)
+        Subscription.objects.create(user=self.user, stock=stock)
 
-        rsi = Mock()
-        rsi.iloc = [70]
-        bb = Mock()
-        bb.iloc = [0.8]
-        mock_history = {"RSI": rsi, "BBands%": bb}
-        mock_get_stock_history.return_value = mock_history
+        data = [[70, 0.8, 70, 100]]
+        mock_history = DataFrame(
+            data, columns=["RSI", "BBands%", "RSI_SMA14", "Close"]
+        )
+
+        self.mock_get_stock_history.return_value = mock_history
+        mock_analyse_stock.return_value = stock.state
+
+        response = self.client.get(
+            self.url + f"?telegram_id={self.user_profile.telegram_id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.mock_analytics_done.send.assert_not_called()
+
+    @patch("stocks.views.analyse_stock")
+    def test_telegram_id_provided_current_state_not_hold(
+        self, mock_analyse_stock
+    ):
+        state = State.objects.create(name="Buy")
+        stock = Stock.objects.create(ticker="AAPL", state=state)
+        Subscription.objects.create(user=self.user, stock=stock)
+
+        data = [[70, 0.8, 70, 100]]
+        mock_history = DataFrame(
+            data, columns=["RSI", "BBands%", "RSI_SMA14", "Close"]
+        )
+
+        self.mock_get_stock_history.return_value = mock_history
+        mock_analyse_stock.return_value = stock.state
+
+        response = self.client.get(
+            self.url + f"?telegram_id={self.user_profile.telegram_id}"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.mock_analytics_done.send.assert_called_once_with(
+            sender=Stock.__class__,
+            instance=stock,
+            history=mock_history,
+            telegram_ids=[str(self.user_profile.telegram_id)],
+        )
+        self.assertEqual(response.data, {"message": "success"})
+
+    @patch("stocks.views.analyse_stock")
+    def test_current_state_not_changed(self, mock_analyse_stock):
+        stock = Stock.objects.create(ticker="AAPL")
+        Subscription.objects.create(user=self.user, stock=stock)
+
+        data = [[70, 0.8, 70, 100]]
+        mock_history = DataFrame(
+            data, columns=["RSI", "BBands%", "RSI_SMA14", "Close"]
+        )
+
+        self.mock_get_stock_history.return_value = mock_history
         mock_analyse_stock.return_value = stock.state
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        mock_analytics_done.send.assert_not_called()
+        self.mock_analytics_done.send.assert_not_called()
+        self.assertEqual(response.data, {"message": "success"})
 
-    @patch("stocks.views.analytics_done")
     @patch("stocks.views.analyse_stock")
-    @patch("stocks.views.get_stock_history")
-    def test_state_changed(
-        self, mock_get_stock_history, mock_analyse_stock, mock_analytics_done
-    ):
-        user = User.objects.create(username="test_user2", password="1234")
+    def test_current_state_changed(self, mock_analyse_stock):
+        new_state = State.objects.create(name="Buy")
         stock = Stock.objects.create(ticker="AAPL")
-        new_state, _ = State.objects.get_or_create(name="Buy")
-        Subscription.objects.create(user=user, stock=stock)
+        Subscription.objects.create(user=self.user, stock=stock)
 
-        rsi = Mock()
-        rsi.iloc = [70]
-        bb = Mock()
-        bb.iloc = [0.8]
-        mock_history = {"RSI": rsi, "BBands%": bb}
-        mock_get_stock_history.return_value = mock_history
+        data = [[70, 0.8, 70, 100]]
+        mock_history = DataFrame(
+            data, columns=["RSI", "BBands%", "RSI_SMA14", "Close"]
+        )
+
+        self.mock_get_stock_history.return_value = mock_history
         mock_analyse_stock.return_value = new_state
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        mock_analytics_done.send.assert_called_once()
-
+        self.mock_analytics_done.send.assert_called_once_with(
+            sender=Stock.__class__,
+            instance=stock,
+            history=mock_history,
+        )
+        self.assertEqual(response.data, {"message": "success"})
         stock.refresh_from_db()
         self.assertEqual(stock.state, new_state)

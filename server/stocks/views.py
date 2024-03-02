@@ -1,5 +1,7 @@
 import logging
 
+from pandas import DataFrame
+
 from core.models import UserProfile
 from core.views import APIkeyViewSet, HasAPIKey
 from rest_framework import mixins, status
@@ -11,7 +13,7 @@ from stocks.analysis.functions import (
     analyse_stock,
     get_stock_history,
 )
-from stocks.models import Stock, Subscription
+from stocks.models import Stock, Subscription, State
 from stocks.serializers import (
     SubscriptionSerializer,
     TelegramSubscriptionSerializer,
@@ -171,24 +173,53 @@ class TriggerAnalysis(APIView):
     permission_classes = [HasAPIKey]
 
     def get(self, request, format=None):
-        active_stocks = Stock.objects.filter(
-            subscriptions__is_active=True
-        ).distinct()
+        message: str
+        telegram_id = request.GET.get("telegram_id", None)
+
+        if telegram_id:
+            active_stocks = Stock.objects.filter(
+                subscriptions__is_active=True,
+                subscriptions__user__userprofile__telegram_id=telegram_id,
+            ).distinct()
+        else:
+            active_stocks = Stock.objects.filter(
+                subscriptions__is_active=True
+            ).distinct()
+
+        if active_stocks.count() == 0:
+            message = "No active stocks"
+            logger.info(message)
+            return Response(
+                status=status.HTTP_200_OK, data={"message": message}
+            )
 
         for stock in active_stocks:
             logger.info(f"Analyzing {stock.ticker}")
-            history = get_stock_history(stock)
+            history: DataFrame = get_stock_history(stock)
 
             current_rsi = history["RSI"].iloc[-1]
+            # current_rsi_sma14 = history["RSI_SMA14"].iloc[-1]
             current_bbands_percent = history["BBands%"].iloc[-1]
-            new_state = analyse_stock(current_rsi, current_bbands_percent)
+            current_state = analyse_stock(current_rsi, current_bbands_percent)
 
-            if new_state != stock.state:
-                stock.state = new_state
-                stock.save()
+            if telegram_id and current_state != State.objects.get(name="Hold"):
                 analytics_done.send(
-                    sender=Stock.__class__, instance=stock, history=history
+                    sender=Stock.__class__,
+                    instance=stock,
+                    history=history,
+                    telegram_ids=[telegram_id],
                 )
-                logger.info(f"{stock} has new state: {new_state}")
+                continue
 
-        return Response(status=status.HTTP_200_OK)
+            if not telegram_id and current_state != stock.state:
+                stock.state = current_state
+                stock.save()
+                logger.info(f"{stock} has new state: {current_state}")
+                analytics_done.send(
+                    sender=Stock.__class__,
+                    instance=stock,
+                    history=history,
+                )
+                continue
+
+        return Response(status=status.HTTP_200_OK, data={"message": "success"})

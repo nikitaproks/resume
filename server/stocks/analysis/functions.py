@@ -5,7 +5,7 @@ import yfinance as yf
 from django.db.models import Q
 from pandas import DataFrame
 from stocks.models import State, Stock
-from technical_analysis import indicators
+from technical_analysis import indicators, moving_average
 
 
 def calculate_bollinger_bands(close, window_size=20, num_of_std=2):
@@ -21,6 +21,31 @@ def calculate_bollinger_bands(close, window_size=20, num_of_std=2):
 
     return (lower, sma, upper)
 
+def rma(series, period):
+    """Calculate the Running Moving Average (RMA) equivalent to TradingView's method."""
+    alpha = 1 / period
+    return series.ewm(alpha=alpha, adjust=False).mean()
+
+def rsi(data, period=14):
+    """Calculate the Relative Strength Index (RSI) similar to TradingView's calculation."""
+    # Calculate price changes
+    delta = data.diff()
+
+    # Separate gains and losses
+    gains = delta.clip(lower=0)
+    losses = -delta.clip(upper=0)
+
+    # Calculate the RMA for gains and losses
+    rma_gains = rma(gains, period)
+    rma_losses = rma(losses, period)
+
+    # Calculate the Relative Strength (RS)
+    rs = rma_gains / rma_losses
+
+    # Calculate the RSI
+    rsi = 100 - (100 / (1 + rs))
+
+    return rsi
 
 def get_fig_buffer(history: DataFrame, symbol: str) -> io.BytesIO:
     apds = [
@@ -36,6 +61,9 @@ def get_fig_buffer(history: DataFrame, symbol: str) -> io.BytesIO:
         ),
         mpf.make_addplot(
             history["RSI"], panel=2, color="purple", width=0.75, ylabel="RSI"
+        ),
+        mpf.make_addplot(
+            history["RSI_SMA14"], panel=2, color="purple", width=0.75, ylabel="RSI"
         ),
     ]
 
@@ -56,14 +84,15 @@ def get_fig_buffer(history: DataFrame, symbol: str) -> io.BytesIO:
     return buffer
 
 
-def get_stock_history(stock: Stock):
+def get_stock_history(stock: Stock) -> DataFrame:
     ticker = yf.Ticker(stock.ticker)
     history = ticker.history(
         period="6mo",
         interval="1d",
     )
 
-    history["RSI"] = indicators.rsi(history["Close"], period=14)
+    history["RSI"] = rsi(history["Close"], 14)
+    history["RSI_SMA14"]  = moving_average.sma(history["RSI"], 14)
     (
         history["BB_lower"],
         history["SMA20"],
@@ -75,18 +104,24 @@ def get_stock_history(stock: Stock):
     return history
 
 
-def analyse_stock(current_rsi: float, current_bb_percent: float) -> str:
+def analyse_stock(
+    current_rsi: float, current_bb_percent: float
+) -> State:
     states_with_either_condition = State.objects.filter(
         Q(
             stateindicator__indicator__name="RSI",
             stateindicator__lower_threshold__lte=current_rsi,
             stateindicator__upper_threshold__gt=current_rsi,
         )
-        | Q(
+    ).filter(
+        Q(
             stateindicator__indicator__name="BBands%",
             stateindicator__lower_threshold__lte=current_bb_percent,
             stateindicator__upper_threshold__gt=current_bb_percent,
         )
     ).distinct()
-
+    
+    if states_with_either_condition.count() == 0:
+        return State.objects.get(name="Hold")
+    
     return states_with_either_condition.first()

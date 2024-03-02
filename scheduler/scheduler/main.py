@@ -4,7 +4,7 @@ from datetime import datetime
 
 from schedule import every, run_pending
 
-from scheduler.settings import BACKEND_API_KEY
+from scheduler.settings import BACKEND_API_KEY, TRIGGER_INTERVAL_SECONDS
 from scheduler.utils import BackendAPI
 
 logging.basicConfig(
@@ -27,15 +27,22 @@ def job():
         logging.info("It's not working hours")
         return
 
-    backend_api = BackendAPI(BACKEND_API_KEY)
+    backend_api = BackendAPI(
+        "http://nginx:80/", authorization=f"Api-Key {BACKEND_API_KEY}"
+    )
     response = backend_api.trigger_analysis()
-    if response.status != 200:
+    if not response:
         logging.error("Failed to trigger analysis")
+        return
+    if response.status != 200:
+        logging.error(
+            f"Analysis trigger returned {response.status} status code"
+        )
         return
 
 
 def main():
-    every(3).seconds.do(job)
+    every(TRIGGER_INTERVAL_SECONDS).seconds.do(job)
     while True:
         run_pending()
         time.sleep(1)

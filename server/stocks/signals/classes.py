@@ -40,6 +40,8 @@ class API:
             )
             if response.status == 301:
                 redirect_url = response.getheader("Location")
+                if not redirect_url:
+                    return None
                 if not redirect_url.startswith(("http://", "https://")):
                     redirect_url = self.base_url + redirect_url
                 response = self.http.request(
@@ -59,13 +61,20 @@ class TelegramAPI(API):
     def get_me(self) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + "/getMe"
         return self._send_request("GET", url)
+    
+    def send_message(
+        self, telegram_id: int, text: str
+    ) -> urllib3.BaseHTTPResponse | None:
+        url = self.base_url + "/sendMessage"
+        data = {"chat_id": str(telegram_id), "text": text}
+        return self._send_request("POST", url, data=data)
 
     def send_photo_from_buffer(
         self, telegram_id: int, buffer: io.BytesIO, caption: str | None = None
-    ) -> urllib3.BaseHTTPResponse | None:
+    ) -> Any:
         url = self.base_url + "/sendPhoto"
         files = {"photo": buffer.getvalue()}
-        data = {"chat_id": telegram_id}
+        data = {"chat_id": str(telegram_id)}
         if caption:
             data["caption"] = caption
         response = requests.post(url, data=data, files=files)

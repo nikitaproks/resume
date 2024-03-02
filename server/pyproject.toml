@@ -25,12 +25,23 @@ mplfinance = "^0.12.10b0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-mypy = "^1.8.0"
-django-stubs = "^4.2.7"
+mypy = "1.7.0"
 djangorestframework-stubs = "^3.14.5"
 pytest-django = "^4.8.0"
 types-requests = "^2.31.0.20240125"
 pandas-stubs = "^2.1.4.231227"
+django-stubs = "^4.2.7"
+pytest-mypy-plugins = "^3.0.0"
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "silent"
+strict_optional = true
+exclude = "tests/base_case.py"
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "server.settings"
 
 [build-system]
 requires = ["poetry-core"]

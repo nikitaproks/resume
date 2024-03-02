@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class API:
     def __init__(self, api_key: str) -> None:
-        self.base_url = "http://nginx:80/api/"
+        self.base_url = "http://nginx:80"
         self.headers = urllib3.make_headers()
         self.headers["Authorization"] = f"Api-Key {api_key}"
         self.headers["Content-Type"] = "application/json"
@@ -29,6 +29,8 @@ class API:
             )
             if response.status == 301:
                 redirect_url = response.getheader("Location")
+                if "http" not in redirect_url:
+                    redirect_url = self.base_url + redirect_url
                 response = self.http.request(
                     method,
                     redirect_url,
@@ -45,7 +47,7 @@ class API:
     ) -> urllib3.BaseHTTPResponse | None:
         url = (
             self.base_url
-            + f"users/by_telegram_id?telegram_id={telegram_user_id}"
+            + f"/api/users/by_telegram_id?telegram_id={telegram_user_id}"
         )
         return self._send_request("GET", url)
 
@@ -61,23 +63,27 @@ class API:
     ) -> urllib3.BaseHTTPResponse | None:
         url = (
             self.base_url
-            + f"telegram/subscriptions/?telegram_id={telegram_id}"
+            + f"/api/telegram/subscriptions/?telegram_id={telegram_id}"
         )
         return self._send_request("GET", url)
 
     def subscribe_stock(
         self, telegram_id: int, ticker: str
     ) -> urllib3.BaseHTTPResponse | None:
-        url = self.base_url + "telegram/subscriptions/"
+        url = self.base_url + "/api/telegram/subscriptions/"
         data = {"telegram_id": telegram_id, "ticker": ticker}
         return self._send_request("POST", url, data)
 
     def unsubscribe_stock(
         self, telegram_id: int, ticker: str
     ) -> urllib3.BaseHTTPResponse | None:
-        url = self.base_url + "telegram/subscriptions/unsubscribe/"
+        url = self.base_url + "/api/telegram/subscriptions/unsubscribe/"
         data = {"telegram_id": telegram_id, "ticker": ticker}
         return self._send_request("POST", url, data)
+    
+    def trigger_analysis(self, telegram_id:int) -> urllib3.BaseHTTPResponse | None:
+        url = self.base_url + f"/api/analysis/?telegram_id={telegram_id}"
+        return self._send_request("GET", url)
 
 
 def authorize(api: API, message: Message) -> dict[str, Any] | str | None:

@@ -5,9 +5,10 @@ import sys
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
+
 
 from telegram.backend_requests import API
 from telegram.routers.register import register_router
@@ -37,6 +38,21 @@ async def command_start_handler(message: Message) -> None:
         await message.answer(f"{data.get('detail')}")
         return
     await message.answer(f"Hello, {hbold(data.get('email'))}!")
+    
+@dp.message(Command("trigger"))
+async def command_start_handler(message: Message) -> None:
+    api = API(API_KEY)
+    response = api.get_user(message.from_user.id)
+    if not response:
+        await message.answer("Something went wrong!")
+        return
+    data = response.json()
+    if response.status != 200:
+        await message.answer(f"{data.get('detail')}")
+        return
+    
+    api.trigger_analysis(message.from_user.id)
+    await message.answer("Stock analysis done")
 
 
 async def main() -> None:

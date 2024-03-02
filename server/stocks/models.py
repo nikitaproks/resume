@@ -4,7 +4,7 @@ from django.db import models
 
 def default_state():
     state, _ = State.objects.get_or_create(name="Hold")
-    return state
+    return state.id
 
 
 class Indicator(models.Model):
@@ -20,7 +20,7 @@ class Indicator(models.Model):
 class State(models.Model):
     name = models.CharField(max_length=25, unique=True)
     description = models.TextField()
-    indicators = models.ManyToManyField(
+    indicators = models.ManyToManyField(  # type: ignore
         Indicator, through="StateIndicator", related_name="states"
     )
 

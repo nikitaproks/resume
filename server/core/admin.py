@@ -4,12 +4,12 @@ from rest_framework_api_key.admin import APIKeyModelAdmin
 
 from contact.models import Contact
 from core.models import Document, UserProfile, UserAPIKey, InviteCode
-from stocks.models import Stock, Subscription
+from stocks.models import Stock, Subscription, StateIndicator, State, Indicator
 
 
 class UserAPIKeyModelAdmin(APIKeyModelAdmin):
-    list_display = [*APIKeyModelAdmin.list_display, "user"]
-    search_fields = [*APIKeyModelAdmin.search_fields, "user"]
+    list_display = [*APIKeyModelAdmin.list_display, "user"]  # type: ignore
+    search_fields = [*APIKeyModelAdmin.search_fields, "user"]  # type: ignore
 
 
 class InviteCodeAdmin(admin.ModelAdmin):
@@ -32,6 +32,9 @@ admin.site.register(InviteCode, InviteCodeAdmin)
 admin.site.register(UserAPIKey, UserAPIKeyModelAdmin)
 admin.site.register(Contact, ContactAdmin)
 admin.site.register(Document)
+admin.site.register(State)
+admin.site.register(Indicator)
+admin.site.register(StateIndicator)
 
 admin.site.register(Stock)
 admin.site.register(Subscription)

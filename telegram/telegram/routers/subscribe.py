@@ -135,10 +135,9 @@ async def subscribe(message: Message, state: FSMContext) -> None:
             reply_markup=ReplyKeyboardRemove(),
         )
         return
-    await state.update_data(ticker=ticker)
     await state.clear()
     await message.answer(
-        f"Subscribed to ticker {ticker}!",
+        f"Subscribed to ticker {ticker.ticker}!",
         reply_markup=ReplyKeyboardRemove(),
     )
 

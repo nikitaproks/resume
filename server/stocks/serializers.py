@@ -35,3 +35,11 @@ class TelegramSubscriptionSerializer(serializers.Serializer):
 
     class Meta:
         fields = ("ticker", "name", "telegram_id")
+
+
+class TelegramSubscriptionSerializerUnsubscribe(serializers.Serializer):
+    ticker = serializers.CharField(required=True)
+    telegram_id = serializers.CharField(required=True)
+
+    class Meta:
+        fields = ("ticker", "telegram_id")

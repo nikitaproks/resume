@@ -23,6 +23,7 @@ class Email(BaseModel):
 
 
 class Register(StatesGroup):
+    invite_code = State()
     email = State()
 
 
@@ -35,15 +36,6 @@ def validate_email(text: str) -> str | None:
 
 
 register_router = Router()
-
-
-@register_router.message(Command("register"))
-async def command_start(message: Message, state: FSMContext) -> None:
-    await state.set_state(Register.email)
-    await message.answer(
-        "Enter email address:",
-        reply_markup=ReplyKeyboardRemove(),
-    )
 
 
 @register_router.message(Command("cancel"))
@@ -64,6 +56,25 @@ async def cancel_handler(message: Message, state: FSMContext) -> None:
     )
 
 
+@register_router.message(Command("register"))
+async def command_start(message: Message, state: FSMContext) -> None:
+    await state.set_state(Register.invite_code)
+    await message.answer(
+        "Enter invite code:",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+
+
+@register_router.message(Register.invite_code)
+async def process_invite_code(message: Message, state: FSMContext) -> None:
+    await state.update_data(invite_code=message.text)
+    await state.set_state(Register.email)
+    await message.answer(
+        "Enter email address:",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+
+
 @register_router.message(Register.email)
 async def process_name(message: Message, state: FSMContext) -> None:
     if not (email := validate_email(message.text)):
@@ -73,9 +84,9 @@ async def process_name(message: Message, state: FSMContext) -> None:
         )
         return
     api = API(API_KEY)
+    invite_code = await state.get_data()
     response = api.register_user(
-        message.from_user.id,
-        email,
+        message.from_user.id, email, invite_code.get("invite_code")
     )
     if not response:
         await message.answer(
@@ -83,7 +94,7 @@ async def process_name(message: Message, state: FSMContext) -> None:
             reply_markup=ReplyKeyboardRemove(),
         )
         return
-
+    # TODO: Show error if invide code is invalid
     if response.status == 409:
         await message.answer(
             "This user is already registered!",

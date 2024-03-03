@@ -1,6 +1,5 @@
 import logging
 import time
-from datetime import datetime
 
 from schedule import every, run_pending
 
@@ -13,20 +12,16 @@ logging.basicConfig(
 )
 
 
-def is_working_hours() -> bool:
-    now = datetime.utcnow()
-    if now.hour <= 9 or now.hour >= 22:
-        return False
-    if now.weekday() in [5, 6]:
-        return False
-    return True
+# def is_working_hours() -> bool:
+#     now = datetime.utcnow()
+#     if now.hour <= 9 or now.hour >= 22:
+#         return False
+#     if now.weekday() in [5, 6]:
+#         return False
+#     return True
 
 
 def job():
-    if not is_working_hours():
-        logging.info("It's not working hours")
-        return
-
     backend_api = BackendAPI(
         "http://nginx:80/", authorization=f"Api-Key {BACKEND_API_KEY}"
     )

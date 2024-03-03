@@ -52,10 +52,14 @@ class API:
         return self._send_request("GET", url)
 
     def register_user(
-        self, telegram_id: str, email: str
+        self, telegram_id: str, email: str, invite_code: str
     ) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + "/api/users/"
-        data = {"email": email, "telegram_id": telegram_id}
+        data = {
+            "email": email,
+            "telegram_id": telegram_id,
+            "invite_code": invite_code,
+        }
         return self._send_request("POST", url, data)
 
     def list_subscriptions(

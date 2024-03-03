@@ -17,6 +17,7 @@ from stocks.models import Stock, Subscription, State
 from stocks.serializers import (
     SubscriptionSerializer,
     TelegramSubscriptionSerializer,
+    TelegramSubscriptionSerializerUnsubscribe,
 )
 from stocks.signals.signals import analytics_done
 
@@ -124,7 +125,9 @@ class TelegramSubscriptionViewSet(
     @action(detail=False, methods=["post"])
     def unsubscribe(self, request, *args, **kwargs):
         # Create serializer
-        serializer = TelegramSubscriptionSerializer(data=request.data)
+        serializer = TelegramSubscriptionSerializerUnsubscribe(
+            data=request.data
+        )
 
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)

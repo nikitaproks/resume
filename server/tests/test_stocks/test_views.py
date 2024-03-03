@@ -22,13 +22,14 @@ class TestTelegramSubscription(APIBaseTest):
         self.user_profile.telegram_id = self.telegram_id
         self.user_profile.save()
 
-        self.stock = Stock.objects.create(ticker="AAPL")
+        self.stock = Stock.objects.create(ticker="AAPL", name="Apple Inc.")
         self.subscription = Subscription.objects.create(
             user=self.user, stock=self.stock
         )
 
         self.post_data = {
             "ticker": "QBIT",
+            "name": "Some name",
             "telegram_id": self.user_profile.telegram_id,
         }
 
@@ -58,10 +59,12 @@ class TestTelegramSubscription(APIBaseTest):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_limit_reached(self):
-        googl = Stock.objects.create(ticker="GOOGL")
-        msft = Stock.objects.create(ticker="MSFT")
-        amzn = Stock.objects.create(ticker="AMZN")
-        tsla = Stock.objects.create(ticker="TSLA")
+        googl = Stock.objects.create(ticker="GOOGL", name="Alphabet Inc.")
+        msft = Stock.objects.create(
+            ticker="MSFT", name="Microsoft Corporation"
+        )
+        amzn = Stock.objects.create(ticker="AMZN", name="Amazon.com Inc.")
+        tsla = Stock.objects.create(ticker="TSLA", name="Tesla Inc.")
         Subscription.objects.create(user=self.user, stock=googl)
         Subscription.objects.create(user=self.user, stock=msft)
         Subscription.objects.create(user=self.user, stock=amzn)
@@ -74,7 +77,8 @@ class TestTelegramSubscription(APIBaseTest):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_already_subscribed(self):
-        self.post_data["ticker"] = "AAPL"
+        self.post_data["ticker"] = self.subscription.stock.ticker
+        self.post_data["name"] = self.subscription.stock.name
         response = self.client.post(self.url, self.post_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -82,6 +86,7 @@ class TestTelegramSubscription(APIBaseTest):
         self.subscription.is_active = False
         self.subscription.save()
         self.post_data["ticker"] = self.subscription.stock.ticker
+        self.post_data["name"] = self.subscription.stock.name
 
         response = self.client.post(self.url, self.post_data)
 
@@ -201,7 +206,9 @@ class TestTriggerAnalysis(APIBaseTest):
             instance=stock,
             history=mock_history,
             telegram_ids=[str(self.user_profile.telegram_id)],
+            new_state=state,
         )
+
         self.assertEqual(response.data, {"message": "success"})
 
     @patch("stocks.views.analyse_stock")

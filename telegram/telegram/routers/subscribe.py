@@ -29,11 +29,12 @@ class Unsubscribe(StatesGroup):
     ticker = State()
 
 
-def validate_ticker(text: str) -> str | None:
+def validate_ticker(text: str) -> yf.Ticker | None:
     ticker = yf.Ticker(text.upper())
-    if "lastPrice" not in ticker.get_fast_info():
+    history = ticker.history(period="1d", interval="1d")
+    if len(history) == 0:
         return
-    return text.upper()
+    return ticker
 
 
 subscribe_router = Router()
@@ -69,7 +70,7 @@ async def command_subscriptions(message: Message) -> None:
 
     message_text = "Your subscriptions:"
     for subscription in response.json():
-        message_text += f"\n    - {subscription['stock']['ticker']}"
+        message_text += f"\n    - {subscription['stock']['name']} {subscription['stock']['ticker']}"
 
     await message.answer(
         message_text,
@@ -125,7 +126,8 @@ async def subscribe(message: Message, state: FSMContext) -> None:
     api = API(API_KEY)
     response = api.subscribe_stock(
         message.from_user.id,
-        ticker,
+        ticker.ticker,
+        ticker.info["shortName"],
     )
     if not response or response.status != 201:
         await message.answer(

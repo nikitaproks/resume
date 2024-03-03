@@ -44,6 +44,7 @@ class StateIndicator(models.Model):
 
 
 class Stock(models.Model):
+    name = models.CharField(max_length=100, default="No name")
     ticker = models.CharField(max_length=10, unique=True)
     state = models.ForeignKey(
         State,

@@ -81,6 +81,7 @@ class TelegramSubscriptionViewSet(
 
         # Get validated data
         ticker = serializer.validated_data.get("ticker")
+        name = serializer.validated_data.get("name")
         telegram_id = serializer.validated_data.get("telegram_id")
 
         try:
@@ -91,7 +92,7 @@ class TelegramSubscriptionViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        stock, _ = Stock.objects.get_or_create(ticker=ticker)
+        stock, _ = Stock.objects.get_or_create(ticker=ticker, name=name)
         if (
             user_profile.user.subscriptions.count()
             >= user_profile.subscriptions_limit
@@ -172,6 +173,7 @@ class TelegramSubscriptionViewSet(
 class TriggerAnalysis(APIView):
     permission_classes = [HasAPIKey]
 
+    # TODO: Make this async
     def get(self, request, format=None):
         message: str
         telegram_id = request.GET.get("telegram_id", None)
@@ -196,6 +198,9 @@ class TriggerAnalysis(APIView):
         for stock in active_stocks:
             logger.info(f"Analyzing {stock.ticker}")
             history: DataFrame = get_stock_history(stock)
+            if history.empty:
+                logger.error(f"Failed to get history for {stock.ticker}")
+                continue
 
             # current_rsi = history["RSI"].iloc[-1]
             # current_rsi_sma14 = history["RSI_SMA14"].iloc[-1]

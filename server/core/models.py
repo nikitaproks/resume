@@ -4,9 +4,13 @@ from django.contrib.auth.models import User
 from rest_framework_api_key.models import AbstractAPIKey
 
 
+def get_invite_code():
+    return get_random_string(length=16)
+
+
 class InviteCode(models.Model):
     code = models.CharField(
-        unique=True, editable=False, default=get_random_string(16)
+        unique=True, editable=False, default=get_invite_code
     )
     is_usable = models.BooleanField(default=True)
     owner = models.OneToOneField(

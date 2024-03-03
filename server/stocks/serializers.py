@@ -30,7 +30,8 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class TelegramSubscriptionSerializer(serializers.Serializer):
     ticker = serializers.CharField(required=True)
+    name = serializers.CharField(required=True)
     telegram_id = serializers.CharField(required=True)
 
     class Meta:
-        fields = ("ticker", "telegram_id")
+        fields = ("ticker", "name", "telegram_id")

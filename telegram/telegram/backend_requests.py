@@ -54,7 +54,7 @@ class API:
     def register_user(
         self, telegram_id: str, email: str
     ) -> urllib3.BaseHTTPResponse | None:
-        url = self.base_url + "users/"
+        url = self.base_url + "/api/users/"
         data = {"email": email, "telegram_id": telegram_id}
         return self._send_request("POST", url, data)
 
@@ -68,10 +68,10 @@ class API:
         return self._send_request("GET", url)
 
     def subscribe_stock(
-        self, telegram_id: int, ticker: str
+        self, telegram_id: int, ticker: str, name: str
     ) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + "/api/telegram/subscriptions/"
-        data = {"telegram_id": telegram_id, "ticker": ticker}
+        data = {"telegram_id": telegram_id, "ticker": ticker, "name": name}
         return self._send_request("POST", url, data)
 
     def unsubscribe_stock(
@@ -80,8 +80,10 @@ class API:
         url = self.base_url + "/api/telegram/subscriptions/unsubscribe/"
         data = {"telegram_id": telegram_id, "ticker": ticker}
         return self._send_request("POST", url, data)
-    
-    def trigger_analysis(self, telegram_id:int) -> urllib3.BaseHTTPResponse | None:
+
+    def trigger_analysis(
+        self, telegram_id: int
+    ) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + f"/api/analysis/?telegram_id={telegram_id}"
         return self._send_request("GET", url)
 

@@ -1,5 +1,5 @@
 from contact.views import ContactViewSet
-from core.views import DownloadDocument, UserViewSet
+from core.views import DownloadDocument, UserViewSet, UserProfileViewSet
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
@@ -18,6 +18,7 @@ router.register(r"users", UserViewSet)
 router.register(r"contacts", ContactViewSet)
 router.register(r"telegram/subscriptions", TelegramSubscriptionViewSet)
 router.register(r"subscriptions", SubscriptionViewSet)
+router.register(r"userprofiles", UserProfileViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

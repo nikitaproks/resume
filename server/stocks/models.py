@@ -66,6 +66,8 @@ class Subscription(models.Model):
     stock = models.ForeignKey(
         Stock, on_delete=models.CASCADE, related_name="subscriptions"
     )
+    period = models.CharField(max_length=10, default="6mo")
+    interval = models.CharField(max_length=10, default="1d")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

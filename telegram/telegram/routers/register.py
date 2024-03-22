@@ -84,9 +84,9 @@ async def process_name(message: Message, state: FSMContext) -> None:
         )
         return
     api = API(API_KEY)
-    invite_code = await state.get_data()
+    data = await state.get_data()
     response = api.register_user(
-        message.from_user.id, email, invite_code.get("invite_code")
+        message.from_user.id, email, data.get("invite_code")
     )
     if not response:
         await message.answer(

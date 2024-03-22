@@ -41,6 +41,7 @@ class UserProfile(models.Model):
     )
     telegram_id = models.IntegerField(blank=True, null=True, unique=True)
     subscriptions_limit = models.PositiveIntegerField(default=5)
+    updates_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

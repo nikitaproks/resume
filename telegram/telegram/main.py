@@ -38,9 +38,10 @@ async def command_start_handler(message: Message) -> None:
         await message.answer(f"{data.get('detail')}")
         return
     await message.answer(f"Hello, {hbold(data.get('email'))}!")
-    
+
+
 @dp.message(Command("trigger"))
-async def command_start_handler(message: Message) -> None:
+async def command_trigger_analysis_handler(message: Message) -> None:
     api = API(API_KEY)
     response = api.get_user(message.from_user.id)
     if not response:
@@ -50,7 +51,7 @@ async def command_start_handler(message: Message) -> None:
     if response.status != 200:
         await message.answer(f"{data.get('detail')}")
         return
-    
+
     api.trigger_analysis(message.from_user.id)
     await message.answer("Stock analysis done")
 

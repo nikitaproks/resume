@@ -87,6 +87,8 @@ class TestTelegramSubscription(APIBaseTest):
         self.subscription.save()
         self.post_data["ticker"] = self.subscription.stock.ticker
         self.post_data["name"] = self.subscription.stock.name
+        self.post_data["period"] = "3mo"
+        self.post_data["interval"] = "1d"
 
         response = self.client.post(self.url, self.post_data)
 
@@ -95,6 +97,8 @@ class TestTelegramSubscription(APIBaseTest):
         self.assertTrue(self.subscription.is_active)
 
     def test_create_success(self):
+        self.post_data["period"] = "3mo"
+        self.post_data["interval"] = "1d"
         # Make POST request to the subscribe endpoint
         response = self.client.post(self.url, self.post_data)
 
@@ -104,7 +108,10 @@ class TestTelegramSubscription(APIBaseTest):
         self.assertTrue(stock_query.exists())
         self.assertTrue(
             Subscription.objects.filter(
-                user=self.user, stock=stock_query.first()
+                user=self.user,
+                stock=stock_query.first(),
+                period="3mo",
+                interval="1d",
             ).exists()
         )
 

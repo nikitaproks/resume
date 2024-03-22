@@ -2,12 +2,13 @@ import logging
 
 from pandas import DataFrame
 
-from core.models import UserProfile
-from core.views import APIkeyViewSet, HasAPIKey
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from core.models import UserProfile
+from core.views import APIkeyViewSet, HasAPIKey
 
 from stocks.analysis.functions import (
     analyse_stock,
@@ -84,6 +85,8 @@ class TelegramSubscriptionViewSet(
         ticker = serializer.validated_data.get("ticker")
         name = serializer.validated_data.get("name")
         telegram_id = serializer.validated_data.get("telegram_id")
+        period = serializer.validated_data.get("period")
+        interval = serializer.validated_data.get("interval")
 
         try:
             user_profile = UserProfile.objects.get(telegram_id=telegram_id)
@@ -104,7 +107,10 @@ class TelegramSubscriptionViewSet(
             )
 
         subscription, created = Subscription.objects.get_or_create(
-            user=user_profile.user, stock=stock
+            user=user_profile.user,
+            stock=stock,
+            period=period,
+            interval=interval,
         )
 
         if not created:
@@ -184,6 +190,7 @@ class TriggerAnalysis(APIView):
         if telegram_id:
             active_stocks = Stock.objects.filter(
                 subscriptions__is_active=True,
+                subscriptions__user__userprofile__updates_active=True,
                 subscriptions__user__userprofile__telegram_id=telegram_id,
             ).distinct()
         else:

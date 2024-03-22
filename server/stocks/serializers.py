@@ -1,4 +1,4 @@
-from core.serializers import UserProfileSerializer
+from core.serializers import UserProfileForUserSerializer
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -6,7 +6,7 @@ from stocks.models import Stock, Subscription
 
 
 class UserSerializer(serializers.ModelSerializer):
-    userprofile = UserProfileSerializer(read_only=True)
+    userprofile = UserProfileForUserSerializer(read_only=True)
 
     class Meta:
         model = User
@@ -32,9 +32,8 @@ class TelegramSubscriptionSerializer(serializers.Serializer):
     ticker = serializers.CharField(required=True)
     name = serializers.CharField(required=True)
     telegram_id = serializers.CharField(required=True)
-
-    class Meta:
-        fields = ("ticker", "name", "telegram_id")
+    period = serializers.CharField(required=True)
+    interval = serializers.CharField(required=True)
 
 
 class TelegramSubscriptionSerializerUnsubscribe(serializers.Serializer):

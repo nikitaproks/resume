@@ -72,10 +72,21 @@ class API:
         return self._send_request("GET", url)
 
     def subscribe_stock(
-        self, telegram_id: int, ticker: str, name: str
+        self,
+        telegram_id: int,
+        ticker: str,
+        name: str,
+        period: str,
+        interval: str,
     ) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + "/api/telegram/subscriptions/"
-        data = {"telegram_id": telegram_id, "ticker": ticker, "name": name}
+        data = {
+            "telegram_id": telegram_id,
+            "ticker": ticker,
+            "name": name,
+            "period": period,
+            "interval": interval,
+        }
         return self._send_request("POST", url, data)
 
     def unsubscribe_stock(
@@ -90,6 +101,13 @@ class API:
     ) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + f"/api/analysis/?telegram_id={telegram_id}"
         return self._send_request("GET", url)
+
+    def change_updates_status(
+        self, telegram_id: int, updates_active: int
+    ) -> urllib3.BaseHTTPResponse | None:
+        url = self.base_url + "/api/userprofiles/change_updates/"
+        data = {"telegram_id": telegram_id, "updates_active": updates_active}
+        return self._send_request("PATCH", url, data)
 
 
 def authorize(api: API, message: Message) -> dict[str, Any] | str | None:

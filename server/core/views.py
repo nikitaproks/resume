@@ -4,7 +4,11 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
+from rest_framework.mixins import (
+    CreateModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+)
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,7 +16,10 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_api_key.permissions import BaseHasAPIKey
 
 from core.models import Document, InviteCode, UserAPIKey, UserProfile
-from core.serializers import TelegramUserSerializer
+from core.serializers import (
+    TelegramUserSerializer,
+    UserProfileChangeUpdatesSerializer,
+)
 
 
 class HasAPIKey(BaseHasAPIKey):
@@ -167,3 +174,37 @@ class DownloadDocument(APIView):
                 {"error": "Something went wrong."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class UserProfileViewSet(APIkeyViewSet, UpdateModelMixin):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileChangeUpdatesSerializer
+
+    @action(detail=False, methods=["post"])
+    def change_updates(self, request, *args, **kwargs):
+        # Create serializer
+        serializer = UserProfileChangeUpdatesSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"error": serializer.errors}, status=400)
+        print(serializer.validated_data)
+
+        # Get validated data
+        telegram_id = serializer.validated_data.get("telegram_id")
+        updates_active = serializer.validated_data.get("updates_active")
+        print(updates_active)
+
+        # Get user profile
+        try:
+            user_profile = UserProfile.objects.get(telegram_id=telegram_id)
+        except UserProfile.DoesNotExist:
+            return Response(
+                {"error": "Telegram user is not registered"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_profile.updates_active = True if updates_active == 1 else False
+        user_profile.save()
+        return Response(
+            {"success": "User updates status changed"},
+            status=status.HTTP_200_OK,
+        )

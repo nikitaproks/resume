@@ -123,4 +123,4 @@ def analyse_stock(current_bb_percent: float) -> State:
     if states_with_either_condition.count() == 0:
         return State.objects.get(name="Hold")
 
-    return states_with_either_condition.first()
+    return states_with_either_condition.first()  # type: ignore

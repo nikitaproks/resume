@@ -20,3 +20,7 @@ test-server:
 
 test-scheduler:
 	cd scheduler && poetry run pytest tests
+
+
+lint-server:
+	sh -c "cd server && poetry run mypy ."

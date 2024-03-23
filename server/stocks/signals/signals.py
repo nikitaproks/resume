@@ -27,11 +27,18 @@ def send_telegram_notification(
         return
 
     if not telegram_ids:
-        telegram_ids = list(
-            instance.users.filter(
+        telegram_ids = [
+            int(telegram_id)
+            for telegram_id in instance.users.filter(
                 userprofile__updates_active=True
-            ).values_list("userprofile__telegram_id", flat=True)
-        )
+            )
+            .values_list(
+                "userprofile__telegram_id",
+                flat=True,
+            )
+            .distinct()
+            if telegram_id
+        ]
 
         if not telegram_ids:
             logger.info(f"No subscriptions for {instance.stock.ticker}")

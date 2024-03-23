@@ -46,12 +46,6 @@ class StateIndicator(models.Model):
 class Stock(models.Model):
     name = models.CharField(max_length=100, default="No name")
     ticker = models.CharField(max_length=10, unique=True)
-    state = models.ForeignKey(
-        State,
-        on_delete=models.SET_DEFAULT,
-        default=default_state,
-        related_name="stocks",
-    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -60,19 +54,22 @@ class Stock(models.Model):
 
 
 class Subscription(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="subscriptions"
-    )
+    users = models.ManyToManyField(User, related_name="subscriptions")
     stock = models.ForeignKey(
         Stock, on_delete=models.CASCADE, related_name="subscriptions"
     )
+    state = models.ForeignKey(
+        State,
+        on_delete=models.SET_DEFAULT,
+        default=default_state,
+        related_name="stocks",
+    )
     period = models.CharField(max_length=10, default="6mo")
     interval = models.CharField(max_length=10, default="1d")
-    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = (("user", "stock"),)
+        unique_together = (("stock", "period", "interval"),)
 
     def __str__(self):
-        return f"{self.user} - {self.stock}"
+        return f"{self.stock} {self.interval}/{self.period}"

@@ -29,15 +29,6 @@ class SubscriptionViewSet(APIkeyViewSet, mixins.ListModelMixin):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
 
-    def get_queryset(self):
-        queryset = Subscription.objects.all()
-        is_active: str | None = self.request.query_params.get(
-            "is_active", None
-        )
-        if is_active:
-            queryset = queryset.filter(is_active=is_active.capitalize())
-        return queryset
-
 
 class TelegramSubscriptionViewSet(
     APIkeyViewSet,
@@ -66,7 +57,7 @@ class TelegramSubscriptionViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
         subscription_query = Subscription.objects.filter(
-            user=user_profile.user, is_active=True
+            users=user_profile.user
         )
 
         return Response(
@@ -88,6 +79,7 @@ class TelegramSubscriptionViewSet(
         period = serializer.validated_data.get("period")
         interval = serializer.validated_data.get("interval")
 
+        # Get if telegram user is registered
         try:
             user_profile = UserProfile.objects.get(telegram_id=telegram_id)
         except UserProfile.DoesNotExist:
@@ -96,7 +88,7 @@ class TelegramSubscriptionViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        stock, _ = Stock.objects.get_or_create(ticker=ticker, name=name)
+        # Check if subscription limit reached
         if (
             user_profile.user.subscriptions.count()
             >= user_profile.subscriptions_limit
@@ -106,23 +98,22 @@ class TelegramSubscriptionViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        subscription, created = Subscription.objects.get_or_create(
-            user=user_profile.user,
+        # Get if stock or subscription exists
+        stock, _ = Stock.objects.get_or_create(ticker=ticker, name=name)
+        subscription, _ = Subscription.objects.get_or_create(
             stock=stock,
             period=period,
             interval=interval,
         )
 
-        if not created:
-            if subscription.is_active:
-                return Response(
-                    {"error": "User is already subscribed this stock"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            else:
-                subscription.is_active = True
-                subscription.save()
+        # Check if user is already subscribed
+        if subscription.users.filter(id=user_profile.user.id).exists():
+            return Response(
+                {"error": "User is already subscribed this stock"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        subscription.users.add(user_profile.user)
         return Response(
             {"success": "User subscribed to stock"},
             status=status.HTTP_201_CREATED,
@@ -151,18 +142,10 @@ class TelegramSubscriptionViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Get stock
-        try:
-            stock = Stock.objects.get(ticker=ticker)
-        except Stock.DoesNotExist:
-            return Response(
-                {"error": "Stock does not exist"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        # Get if user is subscribed
         try:
             subscription = Subscription.objects.get(
-                user=user_profile.user, stock=stock
+                users=user_profile.user, stock__ticker=ticker
             )
         except Subscription.DoesNotExist:
             return Response(
@@ -170,8 +153,7 @@ class TelegramSubscriptionViewSet(
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        subscription.is_active = False
-        subscription.save()
+        subscription.users.remove(user_profile.user)
 
         return Response(
             {"success": "User unsubscribed from stock"},
@@ -183,59 +165,74 @@ class TriggerAnalysis(APIView):
     permission_classes = [HasAPIKey]
 
     # TODO: Make this async
-    def get(self, request, format=None):
-        message: str
-        telegram_id = request.GET.get("telegram_id", None)
-
-        if telegram_id:
-            active_stocks = Stock.objects.filter(
-                subscriptions__is_active=True,
-                subscriptions__user__userprofile__updates_active=True,
-                subscriptions__user__userprofile__telegram_id=telegram_id,
-            ).distinct()
-        else:
-            active_stocks = Stock.objects.filter(
-                subscriptions__is_active=True
-            ).distinct()
-
-        if active_stocks.count() == 0:
-            message = "No active stocks"
-            logger.info(message)
+    def get(self, _, format=None):
+        active_subscriptions = Subscription.objects.all()
+        if active_subscriptions.count() == 0:
+            logger.info("No active subscriptions")
             return Response(
-                status=status.HTTP_200_OK, data={"message": message}
+                status=status.HTTP_200_OK,
+                data={"message": "No active subscriptions"},
             )
 
-        for stock in active_stocks:
-            logger.info(f"Analyzing {stock.ticker}")
-            history: DataFrame = get_stock_history(stock)
+        for sub in active_subscriptions:
+            logger.info(f"Analyzing {sub.stock.ticker}")
+            history: DataFrame = get_stock_history(sub)
             if history.empty:
-                logger.error(f"Failed to get history for {stock.ticker}")
+                logger.error(f"Failed to get history for {sub.stock.ticker}")
                 continue
 
-            # current_rsi = history["RSI"].iloc[-1]
-            # current_rsi_sma14 = history["RSI_SMA14"].iloc[-1]
             current_bbands_percent = history["BBands%"].iloc[-1]
             new_state = analyse_stock(current_bbands_percent)
 
-            if telegram_id and new_state != State.objects.get(name="Hold"):
+            if new_state != sub.state:
+                sub.state = new_state
+                sub.save()
+                logger.info(
+                    f"{sub.stock} {sub.interval}/{sub.period} has new state: {new_state}"
+                )
                 analytics_done.send(
-                    sender=Stock.__class__,
-                    instance=stock,
+                    sender=Subscription.__class__,
+                    instance=sub,
+                    history=history,
+                )
+
+        return Response(status=status.HTTP_200_OK, data={"message": "success"})
+
+
+class TriggerUserAnalysis(APIView):
+    permission_classes = [HasAPIKey]
+
+    def get(self, request, format=None):
+        telegram_id = request.GET.get("telegram_id", None)
+
+        active_subscriptions = Subscription.objects.filter(
+            users__userprofile__telegram_id=telegram_id,
+        )
+
+        if active_subscriptions.count() == 0:
+            logger.info("No active subscriptions")
+            return Response(
+                status=status.HTTP_200_OK,
+                data={"message": "No active subscriptions"},
+            )
+
+        for sub in active_subscriptions:
+            logger.info(f"Analyzing {sub.stock.ticker}")
+            history: DataFrame = get_stock_history(sub)
+            if history.empty:
+                logger.error(f"Failed to get history for {sub.stock.ticker}")
+                continue
+
+            current_bbands_percent = history["BBands%"].iloc[-1]
+            new_state = analyse_stock(current_bbands_percent)
+
+            if new_state != State.objects.get(name="Hold"):
+                analytics_done.send(
+                    sender=Subscription.__class__,
+                    instance=sub,
                     history=history,
                     telegram_ids=[telegram_id],
                     new_state=new_state,
                 )
-                continue
-
-            if not telegram_id and new_state != stock.state:
-                stock.state = new_state
-                stock.save()
-                logger.info(f"{stock} has new state: {new_state}")
-                analytics_done.send(
-                    sender=Stock.__class__,
-                    instance=stock,
-                    history=history,
-                )
-                continue
 
         return Response(status=status.HTTP_200_OK, data={"message": "success"})

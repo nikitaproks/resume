@@ -5,7 +5,7 @@ import sys
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart
 from aiogram.types import Message
 from aiogram.utils.markdown import hbold
 
@@ -17,6 +17,7 @@ from telegram.routers.subscribe import (
     unsubscribe_router,
     subscriptions_router,
 )
+from telegram.routers.other import updates_deactivation_router, trigger_router
 from telegram.settings import API_KEY, TOKEN
 
 logging.basicConfig(
@@ -40,22 +41,6 @@ async def command_start_handler(message: Message) -> None:
     await message.answer(f"Hello, {hbold(data.get('email'))}!")
 
 
-@dp.message(Command("trigger"))
-async def command_trigger_analysis_handler(message: Message) -> None:
-    api = API(API_KEY)
-    response = api.get_user(message.from_user.id)
-    if not response:
-        await message.answer("Something went wrong!")
-        return
-    data = response.json()
-    if response.status != 200:
-        await message.answer(f"{data.get('detail')}")
-        return
-
-    api.trigger_analysis(message.from_user.id)
-    await message.answer("Stock analysis done")
-
-
 async def main() -> None:
     if not TOKEN:
         logging.error("No token provided!")
@@ -65,6 +50,8 @@ async def main() -> None:
     dp.include_router(subscribe_router)
     dp.include_router(unsubscribe_router)
     dp.include_router(subscriptions_router)
+    dp.include_router(updates_deactivation_router)
+    dp.include_router(trigger_router)
     await dp.start_polling(bot)
 
 

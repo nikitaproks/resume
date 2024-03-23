@@ -23,19 +23,23 @@ logger = logging.getLogger(__name__)
 
 class Subscribe(StatesGroup):
     ticker = State()
-    period = State()
     interval = State()
+    period = State()
 
 
 class Unsubscribe(StatesGroup):
     ticker = State()
 
 
-def validate_ticker(text: str) -> yf.Ticker | None:
+def validate_ticker(
+    text: str, period: str = "6mo", interval: str = "1d"
+) -> yf.Ticker | str:
     ticker = yf.Ticker(text.upper())
-    history = ticker.history(period="1d", interval="1d")
-    if len(history) == 0:
-        return
+    try:
+        ticker.history(period=period, interval=interval, raise_errors=True)
+    except Exception as e:
+        logger.error(e)
+        return str(e)
     return ticker
 
 
@@ -72,7 +76,7 @@ async def command_subscriptions(message: Message) -> None:
 
     message_text = "Your subscriptions:"
     for subscription in response.json():
-        message_text += f"\n    - {subscription['stock']['name']} {subscription['stock']['ticker']}"
+        message_text += f"\n    - {subscription['stock']['name']} {subscription['stock']['ticker']} {subscription['interval']}/{subscription['period']}"
 
     await message.answer(
         message_text,
@@ -81,8 +85,6 @@ async def command_subscriptions(message: Message) -> None:
 
 
 # Subscribe
-
-
 @subscribe_router.message(Command("cancel"))
 @subscribe_router.message(F.text.casefold() == "cancel")
 async def cancel_subscribe(message: Message, state: FSMContext) -> None:
@@ -121,65 +123,79 @@ async def command_subscribe(message: Message, state: FSMContext) -> None:
     lambda message: not message.text.startswith("/"), Subscribe.ticker
 )
 async def set_ticker(message: Message, state: FSMContext) -> None:
-    if not (ticker := validate_ticker(message.text)):
+    ticker_or_err = validate_ticker(message.text)
+    if isinstance(ticker_or_err, str):
         await message.answer(
-            f"Ticker {message.text} is not available. Please try another one:",
+            ticker_or_err,
             reply_markup=ReplyKeyboardRemove(),
         )
         return
 
-    await state.update_data(ticker=ticker)
+    await state.update_data(ticker=ticker_or_err)
+    await state.set_state(Subscribe.interval)
+
+    builder = InlineKeyboardBuilder()
+    intervals = [
+        "1m",
+        "2m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "1d",
+        "5d",
+        "1wk",
+        "1mo",
+    ]
+    for interval in intervals:
+        builder.button(
+            text=interval,
+            callback_data=interval,
+        )
+    await message.answer(
+        "Choose interval:",
+        reply_markup=builder.as_markup(),
+    )
+
+
+@subscribe_router.callback_query(Subscribe.interval)
+async def set_interval(query: CallbackQuery, state: FSMContext) -> None:
+    await state.update_data(interval=query.data)
     await state.set_state(Subscribe.period)
 
     builder = InlineKeyboardBuilder()
-
     periods = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y"]
     for period in periods:
         builder.button(
             text=period,
             callback_data=period,
         )
-    await message.answer(
+    await query.message.answer(
         "Choose period:",
         reply_markup=builder.as_markup(),
     )
 
 
-@subscribe_router.message(
-    lambda message: not message.text.startswith("/"), Subscribe.ticker
-)
-async def set_period(query: CallbackQuery, state: FSMContext) -> None:
-    await state.update_data(period=query.data)
-    await state.set_state(Subscribe.interval)
-
-    builder = InlineKeyboardBuilder()
-    intervals = ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y"]
-    for interval in intervals:
-        builder.button(
-            text=interval,
-            callback_data=interval,
-        )
-    await query.message.answer(
-        "Choose interval:",
-        reply_markup=builder.as_markup(),
-    )
-
-
-@subscribe_router.message(
-    lambda message: not message.text.startswith("/"), Subscribe.interval
-)
-async def set_interval_and_submit(
+@subscribe_router.callback_query(Subscribe.period)
+async def set_period_and_submit(
     query: CallbackQuery, state: FSMContext
 ) -> None:
-    api = API(API_KEY)
+    await state.update_data(period=query.data)
     data = await state.get_data()
-    ticker: yf.Ticker | None = data.get("ticker")
-    if not ticker:
+    ticker: yf.Ticker = data.get("ticker")
+
+    # Validating if ticker with this interval and period is possible
+    ticker_or_err = validate_ticker(
+        ticker.ticker, period=data.get("period"), interval=data.get("interval")
+    )
+    if isinstance(ticker_or_err, str):
         await query.message.answer(
-            "Something went wrong!",
+            ticker_or_err,
             reply_markup=ReplyKeyboardRemove(),
         )
         return
+
+    api = API(API_KEY)
     response = api.subscribe_stock(
         query.from_user.id,
         ticker.ticker,
@@ -189,7 +205,7 @@ async def set_interval_and_submit(
     )
     if not response or response.status != 201:
         await query.message.answer(
-            "Something went wrong!",
+            response.json()["error"],
             reply_markup=ReplyKeyboardRemove(),
         )
         return

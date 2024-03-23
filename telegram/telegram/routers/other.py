@@ -37,7 +37,7 @@ async def command_trigger_analysis_handler(message: Message) -> None:
         await message.answer(f"{data.get('detail')}")
         return
 
-    api.trigger_analysis(message.from_user.id)
+    api.trigger_user_analysis(message.from_user.id)
     await message.answer("Stock analysis done")
 
 
@@ -75,4 +75,4 @@ async def command_activate_updates(message: Message) -> None:
         await message.answer(response.json())
         return
 
-    await message.answer("Successfully deactivated updates")
+    await message.answer("Successfully activated updates")

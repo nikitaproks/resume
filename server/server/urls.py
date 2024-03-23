@@ -11,6 +11,7 @@ from stocks.views import (
     SubscriptionViewSet,
     TelegramSubscriptionViewSet,
     TriggerAnalysis,
+    TriggerUserAnalysis,
 )
 
 router = DefaultRouter()
@@ -31,4 +32,9 @@ urlpatterns = [
     path("api/download/", DownloadDocument.as_view(), name="download"),
     path("api/", include(router.urls)),
     path("api/analysis/", TriggerAnalysis.as_view(), name="trigger-analysis"),
+    path(
+        "api/analysis/trigger/",
+        TriggerUserAnalysis.as_view(),
+        name="trigger-user-analysis",
+    ),
 ]

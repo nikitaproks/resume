@@ -4,7 +4,7 @@ import mplfinance as mpf
 import yfinance as yf
 from django.db.models import Q
 from pandas import DataFrame
-from stocks.models import State, Stock
+from stocks.models import State, Subscription
 from technical_analysis import moving_average
 
 
@@ -91,11 +91,11 @@ def get_fig_buffer(history: DataFrame, symbol: str) -> io.BytesIO:
     return buffer
 
 
-def get_stock_history(stock: Stock) -> DataFrame:
-    ticker = yf.Ticker(stock.ticker)
+def get_stock_history(subscription: Subscription) -> DataFrame:
+    ticker = yf.Ticker(subscription.stock.ticker)
     history = ticker.history(
-        period="6mo",
-        interval="1d",
+        period=subscription.period,
+        interval=subscription.interval,
     )
 
     history["RSI"] = rsi(history["Close"], 14)

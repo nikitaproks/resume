@@ -80,6 +80,7 @@ class API:
         interval: str,
     ) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + "/api/telegram/subscriptions/"
+        print(telegram_id, ticker, name, period, interval)
         data = {
             "telegram_id": telegram_id,
             "ticker": ticker,
@@ -102,12 +103,20 @@ class API:
         url = self.base_url + f"/api/analysis/?telegram_id={telegram_id}"
         return self._send_request("GET", url)
 
+    def trigger_user_analysis(
+        self, telegram_id: int
+    ) -> urllib3.BaseHTTPResponse | None:
+        url = (
+            self.base_url + f"/api/analysis/trigger/?telegram_id={telegram_id}"
+        )
+        return self._send_request("GET", url)
+
     def change_updates_status(
         self, telegram_id: int, updates_active: int
     ) -> urllib3.BaseHTTPResponse | None:
         url = self.base_url + "/api/userprofiles/change_updates/"
         data = {"telegram_id": telegram_id, "updates_active": updates_active}
-        return self._send_request("PATCH", url, data)
+        return self._send_request("POST", url, data)
 
 
 def authorize(api: API, message: Message) -> dict[str, Any] | str | None:
